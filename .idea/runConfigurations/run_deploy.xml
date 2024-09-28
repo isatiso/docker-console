@@ -1,0 +1,5 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="run deploy" type="NodeJSConfigurationType" application-parameters="start" path-to-node="$USER_HOME$/.nvm/versions/node/v22.11.0/bin/node" path-to-js-file="index.js" working-dir="$PROJECT_DIR$/deploy/lib">
+    <method v="2" />
+  </configuration>
+</component>

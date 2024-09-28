@@ -1,0 +1,26 @@
+{
+    "name": "docker-console",
+    "private": true,
+    "workspaces": [
+        "common",
+        "server",
+        "ui",
+        "deploy"
+    ],
+    "scripts": {
+        "build": "yarn workspaces run build",
+        "setup": "yarn",
+        "patch": "yarn version --patch --no-git-tag-version"
+    },
+    "devDependencies": {
+        "@angular/cli": "^17.2.0",
+        "@rollup/plugin-commonjs": "^25.0.7",
+        "@rollup/plugin-json": "^6.1.0",
+        "@rollup/plugin-node-resolve": "^15.2.3",
+        "@types/node": "^20.10.2",
+        "ts-node": "^10.9.2",
+        "typescript": "~5.6.3",
+        "typescript-json-schema": "^0.63.0"
+    },
+    "version": "1.0.0"
+}

@@ -1,0 +1,228 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "definitions": {
+        "AWS_DockerRepo": {
+            "properties": {
+                "access_key_id": {
+                    "type": "string"
+                },
+                "alias": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "host": {
+                    "type": "string"
+                },
+                "region": {
+                    "type": "string"
+                },
+                "secret_access_key": {
+                    "type": "string"
+                },
+                "type": {
+                    "const": "aws",
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "NdcConfiguration": {
+            "properties": {
+                "app_path": {
+                    "description": "Path to the application directory\ndefault: '/app'",
+                    "type": "string"
+                },
+                "config_path": {
+                    "description": "Path to the configuration directory\ndefault: '/etc/docker-console'",
+                    "type": "string"
+                },
+                "data_path": {
+                    "description": "Path to the shared data directory\ndefault: '/usr/local/share/docker-console'",
+                    "type": "string"
+                },
+                "docker_repo": {
+                    "description": "Docker repositories\nOnly support AWS ECR for now",
+                    "items": {
+                        "$ref": "#/definitions/AWS_DockerRepo"
+                    },
+                    "type": "array"
+                },
+                "log_level": {
+                    "description": "Log level",
+                    "enum": [
+                        "debug",
+                        "error",
+                        "info",
+                        "warn"
+                    ],
+                    "type": "string"
+                },
+                "log_path": {
+                    "description": "Path to the log directory\ndefault: '/var/log'",
+                    "type": "string"
+                },
+                "port": {
+                    "description": "Port to listen on\ndefault: 7293",
+                    "minimum": 3000,
+                    "type": "number"
+                },
+                "socket_path": {
+                    "description": "Path to the docker unix_socket file\ndefault: '/var/run/docker.sock'",
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "ResponseCacheControl": {
+            "properties": {
+                "max-age": {
+                    "type": "number"
+                },
+                "must-revalidate": {
+                    "type": "boolean"
+                },
+                "no-cache": {
+                    "type": "boolean"
+                },
+                "no-store": {
+                    "type": "boolean"
+                },
+                "no-transform": {
+                    "type": "boolean"
+                },
+                "private": {
+                    "type": "boolean"
+                },
+                "proxy-revalidate": {
+                    "type": "boolean"
+                },
+                "public": {
+                    "type": "boolean"
+                },
+                "s-maxage": {
+                    "type": "number"
+                }
+            },
+            "type": "object"
+        }
+    },
+    "properties": {
+        "http": {
+            "properties": {
+                "body": {
+                    "properties": {
+                        "max_length": {
+                            "type": "number"
+                        }
+                    },
+                    "type": "object"
+                },
+                "cors": {
+                    "properties": {
+                        "allow_headers": {
+                            "type": "string"
+                        },
+                        "allow_methods": {
+                            "type": "string"
+                        },
+                        "allow_origin": {
+                            "type": "string"
+                        },
+                        "max_age": {
+                            "type": "number"
+                        }
+                    },
+                    "type": "object"
+                },
+                "expose_error": {
+                    "type": "boolean"
+                },
+                "port": {
+                    "type": "number"
+                },
+                "proxy": {
+                    "properties": {
+                        "enable": {
+                            "type": "boolean"
+                        },
+                        "ip_header": {
+                            "type": "string"
+                        },
+                        "max_ips_count": {
+                            "type": "number"
+                        }
+                    },
+                    "type": "object"
+                },
+                "server": {
+                    "properties": {
+                        "keepalive_timeout": {
+                            "type": "number"
+                        },
+                        "terminate_timeout": {
+                            "type": "number"
+                        }
+                    },
+                    "type": "object"
+                },
+                "static": {
+                    "properties": {
+                        "cache_control": {
+                            "$ref": "#/definitions/ResponseCacheControl"
+                        },
+                        "cache_size": {
+                            "type": "number"
+                        },
+                        "dotfile": {
+                            "enum": [
+                                "allow",
+                                "deny",
+                                "ignore"
+                            ],
+                            "type": "string"
+                        },
+                        "extensions": {
+                            "items": {
+                                "pattern": "^..*$",
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        "index": {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        "root": {
+                            "type": "string"
+                        },
+                        "vary": {
+                            "anyOf": [
+                                {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                {
+                                    "const": "*",
+                                    "type": "string"
+                                }
+                            ]
+                        }
+                    },
+                    "type": "object"
+                }
+            },
+            "type": "object"
+        },
+        "ndc": {
+            "$ref": "#/definitions/NdcConfiguration"
+        }
+    },
+    "type": "object"
+}
+

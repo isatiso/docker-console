@@ -1,0 +1,5 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Debug Server" type="NodeJSConfigurationType" application-parameters="start" path-to-node="$USER_HOME$/.nvm/versions/node/v22.11.0/bin/node" node-parameters="--require ts-node/register" path-to-js-file="src/index.ts" working-dir="$PROJECT_DIR$/server">
+    <method v="2" />
+  </configuration>
+</component>

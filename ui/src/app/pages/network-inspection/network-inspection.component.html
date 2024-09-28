@@ -1,0 +1,26 @@
+<div class="h-16 flex items-center justify-start gap-3 px-5">
+    <button (click)="go_back()" mat-icon-button>
+        <mat-icon>arrow_back</mat-icon>
+    </button>
+    <div class="text-2xl">
+        @if (inspect_result) {
+            Network: {{ inspect_result.Name }} <span class="text-gray-500 text-sm">{{ inspect_result.Id }}</span>
+        } @else {
+            Create Network
+        }
+    </div>
+    <div class="flex items-center justify-end gap-3 ml-auto">
+        @if (!inspect_result) {
+            <button mat-flat-button color="primary" (click)="create_network$.next(null)">Create</button>
+        }
+    </div>
+</div>
+
+<mat-divider></mat-divider>
+<mat-divider></mat-divider>
+<mat-divider></mat-divider>
+
+<div style="height: calc(100% - 4rem - 3px)">
+    <ndc-monaco-editor style="height: 100%" [options]="options" [(ngModel)]="network_config"></ndc-monaco-editor>
+</div>
+

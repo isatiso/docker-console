@@ -1,0 +1,127 @@
+{
+    "$schema": "../node_modules/@angular/cli/lib/config/schema.json",
+    "version": 1,
+    "newProjectRoot": "projects",
+    "cli": {
+        "packageManager": "yarn",
+        "analytics": false
+    },
+    "projects": {
+        "ndc-ui": {
+            "projectType": "application",
+            "schematics": {
+                "@schematics/angular:component": {
+                    "style": "scss"
+                }
+            },
+            "root": "",
+            "sourceRoot": "src",
+            "prefix": "ndc",
+            "architect": {
+                "build": {
+                    "builder": "@angular-devkit/build-angular:application",
+                    "options": {
+                        "allowedCommonJsDependencies": [
+                            "ajv",
+                            "@xterm/xterm",
+                            "@xterm/addon-fit",
+                            "monaco-editor"
+                        ],
+                        "outputPath": "lib",
+                        "index": "src/index.html",
+                        "browser": "src/main.ts",
+                        "polyfills": [
+                            "zone.js"
+                        ],
+                        "tsConfig": "tsconfig.app.json",
+                        "inlineStyleLanguage": "scss",
+                        "assets": [
+                            "src/favicon.ico",
+                            "src/assets",
+                            {
+                                "glob": "**/*",
+                                "input": "../node_modules/monaco-editor/esm",
+                                "output": "assets/monaco-editor/esm"
+                            }
+                        ],
+                        "styles": [
+                            "src/assets/fonts/open-sans.css",
+                            "src/assets/fonts/md-icon.css",
+                            "src/styles.scss"
+                        ],
+                        "scripts": [],
+                        "loader": {
+                            ".ttf": "binary"
+                        }
+                    },
+                    "configurations": {
+                        "production": {
+                            "budgets": [
+                                {
+                                    "type": "initial",
+                                    "maximumWarning": "1mb",
+                                    "maximumError": "10mb"
+                                },
+                                {
+                                    "type": "anyComponentStyle",
+                                    "maximumWarning": "20kb",
+                                    "maximumError": "2048kb"
+                                }
+                            ],
+                            "outputHashing": "all",
+                            "optimization": true
+                        },
+                        "development": {
+                            "namedChunks": true,
+                            "extractLicenses": false,
+                            "sourceMap": true,
+                            "optimization": false
+                        }
+                    },
+                    "defaultConfiguration": "production"
+                },
+                "serve": {
+                    "builder": "@angular-devkit/build-angular:dev-server",
+                    "options": {
+
+                    },
+                    "configurations": {
+                        "production": {
+                            "buildTarget": "ndc-ui:build:production"
+                        },
+                        "development": {
+                            "buildTarget": "ndc-ui:build:development"
+
+                        }
+                    },
+                    "defaultConfiguration": "development"
+                },
+                "extract-i18n": {
+                    "builder": "@angular-devkit/build-angular:extract-i18n",
+                    "options": {
+                        "buildTarget": "ndc-ui:build"
+                    }
+                },
+                "test": {
+                    "builder": "@angular-devkit/build-angular:karma",
+                    "options": {
+                        "polyfills": [
+                            "zone.js",
+                            "zone.js/testing"
+                        ],
+                        "tsConfig": "tsconfig.spec.json",
+                        "inlineStyleLanguage": "scss",
+                        "assets": [
+                            "src/favicon.ico",
+                            "src/assets"
+                        ],
+                        "styles": [
+                            "src/styles.scss"
+                        ],
+                        "scripts": []
+                    }
+                }
+            }
+        }
+    }
+}

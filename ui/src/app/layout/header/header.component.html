@@ -1,0 +1,19 @@
+<mat-toolbar class="ndc-header" style="gap: 8px;">
+    <div class="flex items-center justify-start gap-3 w-full">
+        <button mat-icon-button (click)="toggle_side()">
+            <mat-icon class="material-symbols-rounded">menu</mat-icon>
+        </button>
+        <div>
+            <span class="text-2xl" style="vertical-align: center; line-height: 1.5rem;">{{ layout.title }}</span>
+        </div>
+        @let loading_data = preload_strategy.all_finished$ | async;
+        @if (loading_data && loading_data.loaded !== loading_data.total) {
+            <mat-spinner diameter="24"></mat-spinner>
+            <span class="text-sm">loading modules...({{ loading_data.loaded }}/{{ loading_data.total }})</span>
+        }
+        <div class="ml-auto"></div>
+        <mat-chip color="primary">v{{ config.version }}</mat-chip>
+        <ng-content></ng-content>
+    </div>
+</mat-toolbar>
+

@@ -1,0 +1,1881 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "definitions": {
+        "DockerDef.BlkioLimit": {
+            "properties": {
+                "path": {
+                    "type": "string"
+                },
+                "rate": {
+                    "type": [
+                        "string",
+                        "number"
+                    ]
+                }
+            },
+            "required": [
+                "path",
+                "rate"
+            ],
+            "type": "object"
+        },
+        "DockerDef.BlkioWeight": {
+            "properties": {
+                "path": {
+                    "type": "string"
+                },
+                "weight": {
+                    "type": [
+                        "string",
+                        "number"
+                    ]
+                }
+            },
+            "required": [
+                "path",
+                "weight"
+            ],
+            "type": "object"
+        },
+        "DockerDef.DefinitionsConfig": {
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "environment": {
+                    "type": "string"
+                },
+                "file": {
+                    "type": "string"
+                },
+                "labels": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "additionalProperties": {
+                                "type": [
+                                    "null",
+                                    "string",
+                                    "number",
+                                    "boolean"
+                                ]
+                            },
+                            "type": "object"
+                        }
+                    ]
+                },
+                "name": {
+                    "type": "string"
+                },
+                "template_driver": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "DockerDef.DefinitionsDeployment": {
+            "properties": {
+                "endpoint_mode": {
+                    "type": "string"
+                },
+                "labels": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "additionalProperties": {
+                                "type": [
+                                    "null",
+                                    "string",
+                                    "number",
+                                    "boolean"
+                                ]
+                            },
+                            "type": "object"
+                        }
+                    ]
+                },
+                "mode": {
+                    "type": "string"
+                },
+                "placement": {
+                    "properties": {
+                        "constraints": {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        "max_replicas_per_node": {
+                            "type": [
+                                "string",
+                                "number"
+                            ]
+                        },
+                        "preferences": {
+                            "items": {
+                                "properties": {
+                                    "spread": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "type": "array"
+                        }
+                    },
+                    "type": "object"
+                },
+                "replicas": {
+                    "minimum": 1,
+                    "type": "integer"
+                },
+                "resources": {
+                    "properties": {
+                        "limits": {
+                            "properties": {
+                                "cpus": {
+                                    "type": [
+                                        "string",
+                                        "number"
+                                    ]
+                                },
+                                "memory": {
+                                    "type": "string"
+                                },
+                                "pids": {
+                                    "type": [
+                                        "string",
+                                        "number"
+                                    ]
+                                }
+                            },
+                            "type": "object"
+                        },
+                        "reservations": {
+                            "properties": {
+                                "cpus": {
+                                    "type": [
+                                        "string",
+                                        "number"
+                                    ]
+                                },
+                                "devices": {
+                                    "items": {
+                                        "properties": {
+                                            "capabilities": {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "count": {
+                                                "type": [
+                                                    "string",
+                                                    "number"
+                                                ]
+                                            },
+                                            "device_ids": {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "driver": {
+                                                "type": "string"
+                                            },
+                                            "options": {
+                                                "anyOf": [
+                                                    {
+                                                        "items": {
+                                                            "type": "string"
+                                                        },
+                                                        "type": "array"
+                                                    },
+                                                    {
+                                                        "additionalProperties": {
+                                                            "type": [
+                                                                "null",
+                                                                "string",
+                                                                "number",
+                                                                "boolean"
+                                                            ]
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        "required": [
+                                            "capabilities"
+                                        ],
+                                        "type": "object"
+                                    },
+                                    "type": "array"
+                                },
+                                "generic_resources": {
+                                    "items": {
+                                        "properties": {
+                                            "discrete_resource_spec": {
+                                                "properties": {
+                                                    "kind": {
+                                                        "type": "string"
+                                                    },
+                                                    "value": {
+                                                        "type": [
+                                                            "string",
+                                                            "number"
+                                                        ]
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    "type": "array"
+                                },
+                                "memory": {
+                                    "type": "string"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
+                    "type": "object"
+                },
+                "restart_policy": {
+                    "properties": {
+                        "condition": {
+                            "type": "string"
+                        },
+                        "delay": {
+                            "type": "string"
+                        },
+                        "max_attempts": {
+                            "type": [
+                                "string",
+                                "number"
+                            ]
+                        },
+                        "window": {
+                            "type": "string"
+                        }
+                    },
+                    "type": "object"
+                },
+                "rollback_config": {
+                    "properties": {
+                        "delay": {
+                            "type": "string"
+                        },
+                        "failure_action": {
+                            "type": "string"
+                        },
+                        "max_failure_ratio": {
+                            "type": [
+                                "string",
+                                "number"
+                            ]
+                        },
+                        "monitor": {
+                            "type": "string"
+                        },
+                        "order": {
+                            "enum": [
+                                "start-first",
+                                "stop-first"
+                            ],
+                            "type": "string"
+                        },
+                        "parallelism": {
+                            "type": [
+                                "string",
+                                "number"
+                            ]
+                        }
+                    },
+                    "type": "object"
+                },
+                "update_config": {
+                    "properties": {
+                        "delay": {
+                            "type": "string"
+                        },
+                        "failure_action": {
+                            "type": "string"
+                        },
+                        "max_failure_ratio": {
+                            "type": [
+                                "string",
+                                "number"
+                            ]
+                        },
+                        "monitor": {
+                            "type": "string"
+                        },
+                        "order": {
+                            "enum": [
+                                "start-first",
+                                "stop-first"
+                            ],
+                            "type": "string"
+                        },
+                        "parallelism": {
+                            "type": [
+                                "string",
+                                "number"
+                            ]
+                        }
+                    },
+                    "type": "object"
+                }
+            },
+            "type": "object"
+        },
+        "DockerDef.DefinitionsDevelopment": {
+            "properties": {
+                "watch": {
+                    "items": {
+                        "properties": {
+                            "action": {
+                                "enum": [
+                                    "rebuild",
+                                    "sync",
+                                    "sync+restart"
+                                ],
+                                "type": "string"
+                            },
+                            "ignore": {
+                                "items": {
+                                    "type": "string"
+                                },
+                                "type": "array"
+                            },
+                            "path": {
+                                "type": "string"
+                            },
+                            "target": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "action",
+                            "path"
+                        ],
+                        "type": "object"
+                    },
+                    "type": "array"
+                }
+            },
+            "type": "object"
+        },
+        "DockerDef.DefinitionsHealthcheck": {
+            "properties": {
+                "disable": {
+                    "type": [
+                        "string",
+                        "boolean"
+                    ]
+                },
+                "interval": {
+                    "type": "string"
+                },
+                "retries": {
+                    "type": [
+                        "string",
+                        "number"
+                    ]
+                },
+                "start_interval": {
+                    "type": "string"
+                },
+                "start_period": {
+                    "type": "string"
+                },
+                "test": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ]
+                },
+                "timeout": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "DockerDef.DefinitionsSecret": {
+            "properties": {
+                "driver": {
+                    "type": "string"
+                },
+                "driver_opts": {
+                    "additionalProperties": {
+                        "type": [
+                            "string",
+                            "number"
+                        ]
+                    },
+                    "type": "object"
+                },
+                "environment": {
+                    "type": "string"
+                },
+                "file": {
+                    "type": "string"
+                },
+                "labels": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "additionalProperties": {
+                                "type": [
+                                    "null",
+                                    "string",
+                                    "number",
+                                    "boolean"
+                                ]
+                            },
+                            "type": "object"
+                        }
+                    ]
+                },
+                "name": {
+                    "type": "string"
+                },
+                "template_driver": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "DockerDef.DefinitionsService": {
+            "properties": {
+                "annotations": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "additionalProperties": {
+                                "type": [
+                                    "null",
+                                    "string",
+                                    "number",
+                                    "boolean"
+                                ]
+                            },
+                            "type": "object"
+                        }
+                    ]
+                },
+                "blkio_config": {
+                    "properties": {
+                        "device_read_bps": {
+                            "items": {
+                                "$ref": "#/definitions/DockerDef.BlkioLimit"
+                            },
+                            "type": "array"
+                        },
+                        "device_read_iops": {
+                            "items": {
+                                "$ref": "#/definitions/DockerDef.BlkioLimit"
+                            },
+                            "type": "array"
+                        },
+                        "device_write_bps": {
+                            "items": {
+                                "$ref": "#/definitions/DockerDef.BlkioLimit"
+                            },
+                            "type": "array"
+                        },
+                        "device_write_iops": {
+                            "items": {
+                                "$ref": "#/definitions/DockerDef.BlkioLimit"
+                            },
+                            "type": "array"
+                        },
+                        "weight": {
+                            "type": [
+                                "string",
+                                "number"
+                            ]
+                        },
+                        "weight_device": {
+                            "items": {
+                                "$ref": "#/definitions/DockerDef.BlkioWeight"
+                            },
+                            "type": "array"
+                        }
+                    },
+                    "type": "object"
+                },
+                "build": {
+                    "anyOf": [
+                        {
+                            "properties": {
+                                "additional_contexts": {
+                                    "anyOf": [
+                                        {
+                                            "items": {
+                                                "type": "string"
+                                            },
+                                            "type": "array"
+                                        },
+                                        {
+                                            "additionalProperties": {
+                                                "type": [
+                                                    "null",
+                                                    "string",
+                                                    "number",
+                                                    "boolean"
+                                                ]
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                },
+                                "args": {
+                                    "anyOf": [
+                                        {
+                                            "items": {
+                                                "type": "string"
+                                            },
+                                            "type": "array"
+                                        },
+                                        {
+                                            "additionalProperties": {
+                                                "type": [
+                                                    "null",
+                                                    "string",
+                                                    "number",
+                                                    "boolean"
+                                                ]
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                },
+                                "cache_from": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "cache_to": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "context": {
+                                    "type": "string"
+                                },
+                                "dockerfile": {
+                                    "type": "string"
+                                },
+                                "dockerfile_inline": {
+                                    "type": "string"
+                                },
+                                "entitlements": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "extra_hosts": {
+                                    "anyOf": [
+                                        {
+                                            "properties": {},
+                                            "type": "object"
+                                        },
+                                        {
+                                            "items": {
+                                                "type": "string"
+                                            },
+                                            "type": "array"
+                                        }
+                                    ]
+                                },
+                                "isolation": {
+                                    "type": "string"
+                                },
+                                "labels": {
+                                    "anyOf": [
+                                        {
+                                            "items": {
+                                                "type": "string"
+                                            },
+                                            "type": "array"
+                                        },
+                                        {
+                                            "additionalProperties": {
+                                                "type": [
+                                                    "null",
+                                                    "string",
+                                                    "number",
+                                                    "boolean"
+                                                ]
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                },
+                                "network": {
+                                    "type": "string"
+                                },
+                                "no_cache": {
+                                    "type": [
+                                        "string",
+                                        "boolean"
+                                    ]
+                                },
+                                "platforms": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "privileged": {
+                                    "type": [
+                                        "string",
+                                        "boolean"
+                                    ]
+                                },
+                                "pull": {
+                                    "type": [
+                                        "string",
+                                        "boolean"
+                                    ]
+                                },
+                                "secrets": {
+                                    "items": {
+                                        "anyOf": [
+                                            {
+                                                "properties": {
+                                                    "gid": {
+                                                        "type": "string"
+                                                    },
+                                                    "mode": {
+                                                        "type": [
+                                                            "string",
+                                                            "number"
+                                                        ]
+                                                    },
+                                                    "source": {
+                                                        "type": "string"
+                                                    },
+                                                    "target": {
+                                                        "type": "string"
+                                                    },
+                                                    "uid": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            {
+                                                "type": "string"
+                                            }
+                                        ]
+                                    },
+                                    "type": "array"
+                                },
+                                "shm_size": {
+                                    "type": [
+                                        "string",
+                                        "number"
+                                    ]
+                                },
+                                "ssh": {
+                                    "anyOf": [
+                                        {
+                                            "items": {
+                                                "type": "string"
+                                            },
+                                            "type": "array"
+                                        },
+                                        {
+                                            "additionalProperties": {
+                                                "type": [
+                                                    "null",
+                                                    "string",
+                                                    "number",
+                                                    "boolean"
+                                                ]
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                },
+                                "tags": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "target": {
+                                    "type": "string"
+                                },
+                                "ulimits": {
+                                    "$ref": "#/definitions/DockerDef.Ulimits"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ]
+                },
+                "cap_add": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "cap_drop": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "cgroup": {
+                    "enum": [
+                        "host",
+                        "private"
+                    ],
+                    "type": "string"
+                },
+                "cgroup_parent": {
+                    "type": "string"
+                },
+                "command": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "type": [
+                                "null",
+                                "string"
+                            ]
+                        }
+                    ]
+                },
+                "configs": {
+                    "items": {
+                        "anyOf": [
+                            {
+                                "properties": {
+                                    "gid": {
+                                        "type": "string"
+                                    },
+                                    "mode": {
+                                        "type": [
+                                            "string",
+                                            "number"
+                                        ]
+                                    },
+                                    "source": {
+                                        "type": "string"
+                                    },
+                                    "target": {
+                                        "type": "string"
+                                    },
+                                    "uid": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            {
+                                "type": "string"
+                            }
+                        ]
+                    },
+                    "type": "array"
+                },
+                "cpu_count": {
+                    "pattern": "^[0-9]+(\\.[0-9]+)?$",
+                    "type": [
+                        "string",
+                        "number"
+                    ]
+                },
+                "cpu_percent": {
+                    "pattern": "^[0-9]+(\\.[0-9]+)?$",
+                    "type": [
+                        "string",
+                        "number"
+                    ]
+                },
+                "cpu_period": {
+                    "pattern": "^[0-9]+(\\.[0-9]+)?$",
+                    "type": [
+                        "string",
+                        "number"
+                    ]
+                },
+                "cpu_quota": {
+                    "pattern": "^[0-9]+(\\.[0-9]+)?$",
+                    "type": [
+                        "string",
+                        "number"
+                    ]
+                },
+                "cpu_rt_period": {
+                    "pattern": "^(\\d+(us|ms|s|m|h))+$",
+                    "type": [
+                        "string",
+                        "number"
+                    ]
+                },
+                "cpu_rt_runtime": {
+                    "pattern": "^(\\d+(us|ms|s|m|h))+$",
+                    "type": [
+                        "string",
+                        "number"
+                    ]
+                },
+                "cpu_shares": {
+                    "pattern": "^[0-9]+(\\.[0-9]+)?$",
+                    "type": [
+                        "string",
+                        "number"
+                    ]
+                },
+                "cpus": {
+                    "pattern": "^[0-9]+(\\.[0-9]+)?$",
+                    "type": [
+                        "string",
+                        "number"
+                    ]
+                },
+                "cpuset": {
+                    "type": "string"
+                },
+                "credential_spec": {
+                    "properties": {
+                        "config": {
+                            "type": "string"
+                        },
+                        "file": {
+                            "type": "string"
+                        },
+                        "registry": {
+                            "type": "string"
+                        }
+                    },
+                    "type": "object"
+                },
+                "depends_on": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "additionalProperties": {
+                                "properties": {
+                                    "condition": {
+                                        "enum": [
+                                            "service_completed_successfully",
+                                            "service_healthy",
+                                            "service_started"
+                                        ],
+                                        "type": "string"
+                                    },
+                                    "required": {
+                                        "type": "boolean"
+                                    },
+                                    "restart": {
+                                        "type": [
+                                            "string",
+                                            "boolean"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "condition"
+                                ],
+                                "type": "object"
+                            },
+                            "type": "object"
+                        }
+                    ]
+                },
+                "deploy": {
+                    "$ref": "#/definitions/DockerDef.DefinitionsDeployment"
+                },
+                "develop": {
+                    "$ref": "#/definitions/DockerDef.DefinitionsDevelopment"
+                },
+                "device_cgroup_rules": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "devices": {
+                    "items": {
+                        "anyOf": [
+                            {
+                                "properties": {
+                                    "permissions": {
+                                        "type": "string"
+                                    },
+                                    "source": {
+                                        "type": "string"
+                                    },
+                                    "target": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "source"
+                                ],
+                                "type": "object"
+                            },
+                            {
+                                "type": "string"
+                            }
+                        ]
+                    },
+                    "type": "array"
+                },
+                "dns": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ]
+                },
+                "dns_opt": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "dns_search": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ]
+                },
+                "domainname": {
+                    "type": "string"
+                },
+                "entrypoint": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "type": [
+                                "null",
+                                "string"
+                            ]
+                        }
+                    ]
+                },
+                "env_file": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "anyOf": [
+                                    {
+                                        "properties": {
+                                            "format": {
+                                                "type": "string"
+                                            },
+                                            "path": {
+                                                "type": "string"
+                                            },
+                                            "required": {
+                                                "type": [
+                                                    "string",
+                                                    "boolean"
+                                                ]
+                                            }
+                                        },
+                                        "required": [
+                                            "path"
+                                        ],
+                                        "type": "object"
+                                    },
+                                    {
+                                        "type": "string"
+                                    }
+                                ]
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ]
+                },
+                "environment": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "additionalProperties": {
+                                "type": [
+                                    "null",
+                                    "string",
+                                    "number",
+                                    "boolean"
+                                ]
+                            },
+                            "type": "object"
+                        }
+                    ]
+                },
+                "expose": {
+                    "items": {
+                        "type": [
+                            "string",
+                            "number"
+                        ]
+                    },
+                    "type": "array"
+                },
+                "extends": {
+                    "anyOf": [
+                        {
+                            "properties": {
+                                "file": {
+                                    "type": "string"
+                                },
+                                "service": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "service"
+                            ],
+                            "type": "object"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ]
+                },
+                "external_links": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "extra_hosts": {
+                    "anyOf": [
+                        {
+                            "properties": {},
+                            "type": "object"
+                        },
+                        {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        }
+                    ]
+                },
+                "group_add": {
+                    "items": {
+                        "type": [
+                            "string",
+                            "number"
+                        ]
+                    },
+                    "type": "array"
+                },
+                "healthcheck": {
+                    "$ref": "#/definitions/DockerDef.DefinitionsHealthcheck"
+                },
+                "hostname": {
+                    "type": "string"
+                },
+                "image": {
+                    "type": "string"
+                },
+                "init": {
+                    "type": "boolean"
+                },
+                "ipc": {
+                    "type": "string"
+                },
+                "isolation": {
+                    "enum": [
+                        "default",
+                        "hyperv",
+                        "process"
+                    ],
+                    "type": "string"
+                },
+                "labels": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "additionalProperties": {
+                                "type": [
+                                    "null",
+                                    "string",
+                                    "number",
+                                    "boolean"
+                                ]
+                            },
+                            "type": "object"
+                        }
+                    ]
+                },
+                "links": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "logging": {
+                    "properties": {
+                        "driver": {
+                            "type": "string"
+                        },
+                        "options": {
+                            "additionalProperties": {
+                                "type": [
+                                    "null",
+                                    "string",
+                                    "number"
+                                ]
+                            },
+                            "type": "object"
+                        }
+                    },
+                    "type": "object"
+                },
+                "mac_address": {
+                    "type": "string"
+                },
+                "mem_limit": {
+                    "type": [
+                        "string",
+                        "number"
+                    ]
+                },
+                "mem_reservation": {
+                    "type": [
+                        "string",
+                        "number"
+                    ]
+                },
+                "mem_swappiness": {
+                    "maximum": 100,
+                    "minimum": 0,
+                    "type": "number"
+                },
+                "memswap_limit": {
+                    "type": [
+                        "string",
+                        "number"
+                    ]
+                },
+                "network_mode": {
+                    "type": "string"
+                },
+                "networks": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "additionalProperties": {
+                                "anyOf": [
+                                    {
+                                        "properties": {
+                                            "aliases": {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "driver_opts": {
+                                                "additionalProperties": {
+                                                    "type": [
+                                                        "string",
+                                                        "number"
+                                                    ]
+                                                },
+                                                "type": "object"
+                                            },
+                                            "ipv4_address": {
+                                                "type": "string"
+                                            },
+                                            "ipv6_address": {
+                                                "type": "string"
+                                            },
+                                            "link_local_ips": {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "mac_address": {
+                                                "type": "string"
+                                            },
+                                            "priority": {
+                                                "type": "number"
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ]
+                            },
+                            "type": "object"
+                        }
+                    ]
+                },
+                "oom_kill_disable": {
+                    "type": "boolean"
+                },
+                "oom_score_adj": {
+                    "maximum": 1000,
+                    "minimum": -1000,
+                    "type": "integer"
+                },
+                "pid": {
+                    "type": "string"
+                },
+                "pids_limit": {
+                    "type": "number"
+                },
+                "platform": {
+                    "type": "string"
+                },
+                "ports": {
+                    "items": {
+                        "anyOf": [
+                            {
+                                "properties": {
+                                    "app_protocol": {
+                                        "type": "string"
+                                    },
+                                    "host_ip": {
+                                        "type": "string"
+                                    },
+                                    "mode": {
+                                        "type": "string"
+                                    },
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "protocol": {
+                                        "type": "string"
+                                    },
+                                    "published": {
+                                        "type": [
+                                            "string",
+                                            "number"
+                                        ]
+                                    },
+                                    "target": {
+                                        "type": [
+                                            "string",
+                                            "number"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            {
+                                "type": [
+                                    "string",
+                                    "number"
+                                ]
+                            }
+                        ]
+                    },
+                    "type": "array"
+                },
+                "post_start": {
+                    "items": {
+                        "$ref": "#/definitions/DockerDef.DefinitionsServiceHook"
+                    },
+                    "type": "array"
+                },
+                "pre_stop": {
+                    "items": {
+                        "$ref": "#/definitions/DockerDef.DefinitionsServiceHook"
+                    },
+                    "type": "array"
+                },
+                "privileged": {
+                    "type": "boolean"
+                },
+                "profiles": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "pull_policy": {
+                    "enum": [
+                        "always",
+                        "build",
+                        "if_not_present",
+                        "missing",
+                        "never"
+                    ],
+                    "type": "string"
+                },
+                "read_only": {
+                    "type": "boolean"
+                },
+                "restart": {
+                    "type": "string"
+                },
+                "runtime": {
+                    "type": "string"
+                },
+                "scale": {
+                    "type": [
+                        "string",
+                        "number"
+                    ]
+                },
+                "secrets": {
+                    "items": {
+                        "anyOf": [
+                            {
+                                "properties": {
+                                    "gid": {
+                                        "type": "string"
+                                    },
+                                    "mode": {
+                                        "type": [
+                                            "string",
+                                            "number"
+                                        ]
+                                    },
+                                    "source": {
+                                        "type": "string"
+                                    },
+                                    "target": {
+                                        "type": "string"
+                                    },
+                                    "uid": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            {
+                                "type": "string"
+                            }
+                        ]
+                    },
+                    "type": "array"
+                },
+                "security_opt": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "shm_size": {
+                    "type": [
+                        "string",
+                        "number"
+                    ]
+                },
+                "stdin_open": {
+                    "type": "boolean"
+                },
+                "stop_grace_period": {
+                    "type": "string"
+                },
+                "stop_signal": {
+                    "type": "string"
+                },
+                "storage_opt": {
+                    "additionalProperties": {},
+                    "type": "object"
+                },
+                "sysctls": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "additionalProperties": {
+                                "type": [
+                                    "null",
+                                    "string",
+                                    "number",
+                                    "boolean"
+                                ]
+                            },
+                            "type": "object"
+                        }
+                    ]
+                },
+                "tmpfs": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ]
+                },
+                "tty": {
+                    "type": "boolean"
+                },
+                "ulimits": {
+                    "$ref": "#/definitions/DockerDef.Ulimits"
+                },
+                "user": {
+                    "type": "string"
+                },
+                "userns_mode": {
+                    "type": "string"
+                },
+                "uts": {
+                    "type": "string"
+                },
+                "volumes": {
+                    "items": {
+                        "anyOf": [
+                            {
+                                "properties": {
+                                    "bind": {
+                                        "properties": {
+                                            "create_host_path": {
+                                                "type": "boolean"
+                                            },
+                                            "propagation": {
+                                                "enum": [
+                                                    "private",
+                                                    "rprivate",
+                                                    "rshared",
+                                                    "rslave",
+                                                    "shared",
+                                                    "slave"
+                                                ],
+                                                "type": "string"
+                                            },
+                                            "selinux": {
+                                                "enum": [
+                                                    "Z",
+                                                    "z"
+                                                ],
+                                                "type": "string"
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    "consistency": {
+                                        "enum": [
+                                            "cached",
+                                            "consistent",
+                                            "default",
+                                            "delegated"
+                                        ],
+                                        "type": "string"
+                                    },
+                                    "read_only": {
+                                        "type": "boolean"
+                                    },
+                                    "source": {
+                                        "type": "string"
+                                    },
+                                    "target": {
+                                        "type": "string"
+                                    },
+                                    "tmpfs": {
+                                        "properties": {
+                                            "mode": {
+                                                "type": "integer"
+                                            },
+                                            "size": {
+                                                "type": [
+                                                    "string",
+                                                    "number"
+                                                ]
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    "type": {
+                                        "enum": [
+                                            "bind",
+                                            "cluster",
+                                            "npipe",
+                                            "tmpfs",
+                                            "volume"
+                                        ],
+                                        "type": "string"
+                                    },
+                                    "volume": {
+                                        "properties": {
+                                            "nocopy": {
+                                                "type": "boolean"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                },
+                                "required": [
+                                    "type"
+                                ],
+                                "type": "object"
+                            },
+                            {
+                                "type": "string"
+                            }
+                        ]
+                    },
+                    "type": "array"
+                },
+                "volumes_from": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "working_dir": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "image"
+            ],
+            "type": "object"
+        },
+        "DockerDef.DefinitionsServiceHook": {
+            "properties": {
+                "command": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "type": [
+                                "null",
+                                "string"
+                            ]
+                        }
+                    ]
+                },
+                "environment": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "additionalProperties": {
+                                "type": [
+                                    "null",
+                                    "string",
+                                    "number",
+                                    "boolean"
+                                ]
+                            },
+                            "type": "object"
+                        }
+                    ]
+                },
+                "privileged": {
+                    "type": [
+                        "string",
+                        "boolean"
+                    ]
+                },
+                "user": {
+                    "type": "string"
+                },
+                "working_dir": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "DockerDef.DefinitionsVolume": {
+            "properties": {
+                "driver": {
+                    "type": "string"
+                },
+                "driver_opts": {
+                    "additionalProperties": {
+                        "type": [
+                            "string",
+                            "number"
+                        ]
+                    },
+                    "type": "object"
+                },
+                "external": {
+                    "type": "boolean"
+                },
+                "labels": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "additionalProperties": {
+                                "type": [
+                                    "null",
+                                    "string",
+                                    "number",
+                                    "boolean"
+                                ]
+                            },
+                            "type": "object"
+                        }
+                    ]
+                },
+                "name": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "DockerDef.Ulimits": {
+            "additionalProperties": {
+                "anyOf": [
+                    {
+                        "properties": {
+                            "hard": {
+                                "type": [
+                                    "string",
+                                    "number"
+                                ]
+                            },
+                            "soft": {
+                                "type": [
+                                    "string",
+                                    "number"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "hard",
+                            "soft"
+                        ],
+                        "type": "object"
+                    },
+                    {
+                        "type": [
+                            "string",
+                            "number"
+                        ]
+                    }
+                ]
+            },
+            "type": "object"
+        }
+    },
+    "properties": {
+        "configs": {
+            "additionalProperties": {
+                "$ref": "#/definitions/DockerDef.DefinitionsConfig"
+            },
+            "type": "object"
+        },
+        "networks": {
+            "additionalProperties": {
+                "properties": {
+                    "attachable": {
+                        "type": "boolean"
+                    },
+                    "driver": {
+                        "type": "string"
+                    },
+                    "driver_opts": {
+                        "additionalProperties": {
+                            "type": [
+                                "string",
+                                "number"
+                            ]
+                        },
+                        "type": "object"
+                    },
+                    "enable_ipv6": {
+                        "type": "boolean"
+                    },
+                    "external": {
+                        "type": "boolean"
+                    },
+                    "internal": {
+                        "type": "boolean"
+                    },
+                    "ipam": {
+                        "properties": {
+                            "config": {
+                                "items": {
+                                    "properties": {
+                                        "aux_addresses": {
+                                            "additionalProperties": {
+                                                "type": "string"
+                                            },
+                                            "type": "object"
+                                        },
+                                        "gateway": {
+                                            "type": "string"
+                                        },
+                                        "ip_range": {
+                                            "type": "string"
+                                        },
+                                        "subnet": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                },
+                                "type": "array"
+                            },
+                            "driver": {
+                                "type": "string"
+                            },
+                            "options": {
+                                "additionalProperties": {
+                                    "type": "string"
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "labels": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "type": "string"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "additionalProperties": {
+                                    "type": [
+                                        "null",
+                                        "string",
+                                        "number",
+                                        "boolean"
+                                    ]
+                                },
+                                "type": "object"
+                            }
+                        ]
+                    },
+                    "name": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "type": "object"
+        },
+        "secrets": {
+            "additionalProperties": {
+                "$ref": "#/definitions/DockerDef.DefinitionsSecret"
+            },
+            "type": "object"
+        },
+        "services": {
+            "additionalProperties": {
+                "$ref": "#/definitions/DockerDef.DefinitionsService"
+            },
+            "type": "object"
+        },
+        "volumes": {
+            "additionalProperties": {
+                "$ref": "#/definitions/DockerDef.DefinitionsVolume"
+            },
+            "type": "object"
+        }
+    },
+    "required": [
+        "services"
+    ],
+    "type": "object"
+}
+

@@ -1,0 +1,19 @@
+//@use '@angular/material' as mat;
+
+:host {
+    position: fixed;
+    width: 100%;
+    top: 0;
+    left: 0;
+    z-index: 999;
+}
+
+.logo {
+    width: 25px;
+    height: 25px;
+    filter: brightness(1) contrast(300%) invert(1)
+}
+
+.ndc-header {
+    background-color: var(--header-background-color);
+}

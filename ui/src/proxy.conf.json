@@ -1,0 +1,8 @@
+{
+    "/ndc_api/**": {
+        "target": "http://localhost:7293",
+        "secure": false,
+        "changeOrigin": true,
+        "ws": true
+    }
+}

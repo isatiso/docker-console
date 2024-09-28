@@ -1,0 +1,24 @@
+{
+    "name": "@docker-console/common",
+    "version": "0.0.1",
+    "main": "./lib/cjs/index.js",
+    "module": "./lib/esm/index.js",
+    "types": "./lib/cjs/index.d.ts",
+    "license": "ISC",
+    "scripts": {
+        "build": "npm run build:schema && npm run build:lib",
+        "build:lib": "rm -rf ./lib && NODE_OPTIONS='--max_old_space_size=4096' tsc --skipLibCheck && tsc -p tsconfig.esm.json --skipLibCheck && cp -r ./schema ./lib",
+        "build:schema": "rm -rf ./schema && typescript-json-schema --required ./tsconfig.defs.json DockerDef.UnifiedDefinitions -o ./schema/def.schema.json"
+    },
+    "dependencies": {
+        "@types/node": "^20.10.2",
+        "@tarpit/core": "^0.5.66",
+        "@tarpit/judge": "^0.5.66",
+        "@tarpit/type-tools": "^0.5.66",
+        "ajv": "^8.12.0",
+        "rxjs": "~7.8.1",
+        "tslib": "^2.6.2"
+    },
+    "devDependencies": {
+    }
+}

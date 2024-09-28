@@ -1,0 +1,16 @@
+:host {
+    display: block;
+
+    .height-step {
+        padding: 22px 24px;
+        transition: max-height 250ms cubic-bezier(0, 0, 0.2, 1), min-height 250ms cubic-bezier(0, 0, 0.2, 1);
+        overflow: hidden;
+    }
+
+    .content {
+        height: fit-content;
+        position: relative;
+        max-height: 90vh;
+        overflow: auto;
+    }
+}

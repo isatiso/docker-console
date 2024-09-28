@@ -1,0 +1,12 @@
+<div mat-dialog-title>Notice</div>
+<mat-dialog-content>
+    <ng-container *ngIf="data.raw; else pretty">
+        <pre class="mono-400 font-s"><ng-container *ngFor="let msg of data.messages">{{ msg + '\n' }}</ng-container></pre>
+    </ng-container>
+    <ng-template #pretty>
+        <div *ngFor="let msg of data.messages" style="font-size: 16px;">{{ msg }}</div>
+    </ng-template>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+    <button (click)="dialogRef.close(data)" mat-raised-button color="accent">OK</button>
+</mat-dialog-actions>

@@ -1,0 +1,20 @@
+<div class="h-16 flex items-center justify-start gap-3 px-5">
+    <button (click)="go_back()" mat-icon-button>
+        <mat-icon>arrow_back</mat-icon>
+    </button>
+    <div>
+        {{ name }}
+    </div>
+    <div class="flex items-center justify-end gap-3 ml-auto">
+        <mat-slide-toggle [checked]="auto_scroll" (change)="auto_scroll = $event.checked">Auto Scroll</mat-slide-toggle>
+    </div>
+</div>
+
+<mat-divider></mat-divider>
+<mat-divider></mat-divider>
+<mat-divider></mat-divider>
+
+<div class="overflow-y-auto" style="height: calc(100% - 4rem - 3px)">
+    <ndc-monaco-editor #log_view style="height: 100%" [options]="options" [(ngModel)]="logs"></ndc-monaco-editor>
+</div>
+

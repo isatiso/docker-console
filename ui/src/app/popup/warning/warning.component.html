@@ -1,0 +1,14 @@
+<div mat-dialog-title>
+    <div style="color: red; display: inline-flex; align-items: center; gap: 8px;">
+        <mat-icon fontIcon="warning"></mat-icon>
+        <div style="font-size: 20px; line-height: 28px;">{{ data.title }}</div>
+    </div>
+</div>
+<mat-dialog-content>
+    <div *ngFor="let msg of data.messages" style="font-size: 16px;">{{ msg }}</div>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+    @for (action of actions; track $index) {
+        <button (click)="dialogRef.close(action.data)" mat-flat-button [color]="action.color">{{ action.name }}</button>
+    }
+</mat-dialog-actions>

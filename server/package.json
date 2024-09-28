@@ -1,0 +1,36 @@
+{
+    "name": "@docker-console/server",
+    "version": "0.0.1",
+    "description": "",
+    "main": "./lib/index.js",
+    "types": "./lib/index.d.ts",
+    "license": "ISC",
+    "scripts": {
+        "build": "rm -rf ./lib && NODE_OPTIONS='--max_old_space_size=4096' tsc --skipLibCheck",
+        "generate-schema": "typescript-json-schema --ignoreErrors ./tsconfig.json TpConfigSchema -o ./src/schema/ndc.schema.json"
+    },
+    "dependencies": {
+        "@aws-sdk/client-ecr": "^3.583.0",
+        "@aws-sdk/client-s3": "^3.583.0",
+        "@docker-console/common": "*",
+        "@tarpit/config": "^0.5.66",
+        "@tarpit/content-type": "^0.5.66",
+        "@tarpit/core": "^0.5.66",
+        "@tarpit/dora": "^0.5.66",
+        "@tarpit/http": "^0.5.66",
+        "@tarpit/judge": "^0.5.66",
+        "@tarpit/schedule": "^0.5.66",
+        "@types/ssh2": "^1.15.0",
+        "axios": "~1.7.7",
+        "commander": "^12.1.0",
+        "compare-versions": "^6.1.0",
+        "pino": "^8.16.2",
+        "pino-pretty": "^10.2.3",
+        "readable-stream": "^3.5.0",
+        "rxjs": "~7.8.1",
+        "split-ca": "^1.0.1",
+        "ssh2": "^1.15.0",
+        "tar": "^7.4.3",
+        "tslib": "^2.6.2"
+    }
+}

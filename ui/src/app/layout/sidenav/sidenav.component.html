@@ -1,0 +1,34 @@
+<mat-drawer-container style="height: 100%;">
+    <mat-drawer mode="side" [opened]="layout.sidenav_open" class="rounded-none box-border"
+                style="width: 180px; border-top-right-radius: 0; border-bottom-right-radius: 0; border-right: 1px solid var(--divider-color)">
+        <div class="list">
+            <div routerLink="/projects" routerLinkActive="active" class="list-item" matRipple>
+                <span class="link-name">Projects</span>
+            </div>
+            <div routerLink="/containers" routerLinkActive="active" class="list-item" matRipple>
+                <span class="link-name">Containers</span>
+            </div>
+            <div routerLink="/networks" routerLinkActive="active" class="list-item" matRipple>
+                <span class="link-name">Networks</span>
+            </div>
+            <div routerLink="/volumes" routerLinkActive="active" class="list-item" matRipple>
+                <span class="link-name">Volumes</span>
+            </div>
+            <div routerLink="/images" routerLinkActive="active" class="list-item" matRipple>
+                <span class="link-name">Images</span>
+            </div>
+            <div routerLink="/files" routerLinkActive="active" class="list-item" matRipple>
+                <span class="link-name">Files</span>
+            </div>
+            <div routerLink="/queue" routerLinkActive="active" class="list-item" matRipple>
+                <span class="link-name" [matBadge]="docker.badge_count" [matBadgeHidden]="!docker.badge_count" matBadgeColor="accent">Download</span>
+            </div>
+        </div>
+    </mat-drawer>
+
+    <mat-drawer-content>
+        <div class="content-container">
+            <router-outlet></router-outlet>
+        </div>
+    </mat-drawer-content>
+</mat-drawer-container>

@@ -1,0 +1,95 @@
+<div class="h-16 flex items-center justify-start gap-3 px-4">
+    <div class="flex items-baseline justify-start gap-3">
+        <div class="text-2xl">Projects</div>
+    </div>
+    <div class="flex items-center justify-end gap-3 ml-auto">
+        <button (click)="create_file$.next()" color="primary" mat-mini-fab matTooltip="Create new file">
+            <mat-icon class="material-symbols-rounded">note_add</mat-icon>
+        </button>
+    </div>
+</div>
+
+<mat-divider></mat-divider>
+<mat-divider></mat-divider>
+<mat-divider></mat-divider>
+
+<div class="overflow-y-auto" style="height: calc(100% - 4rem - 3px)">
+    <table [dataSource]="files" mat-table>
+
+        <ng-container matColumnDef="name">
+            <th *matHeaderCellDef mat-header-cell></th>
+            <td *matCellDef="let element" mat-cell>
+                <div class="inline-flex items-center justify-start gap-2">
+                    <div><a (click)="go_edit(element.filename)" class="directory-link" matTooltip="Edit File">{{ element.filename }}</a></div>
+                </div>
+            </td>
+        </ng-container>
+
+        <ng-container matColumnDef="valid">
+            <th *matHeaderCellDef mat-header-cell>Validity</th>
+            <td *matCellDef="let element" mat-cell>
+                <div class="flex items-center justify-start gap-2">
+                    @if (element.valid) {
+                        <mat-icon class="text-green-500 material-symbols-rounded">check</mat-icon>
+                    } @else {
+                        <mat-icon [matTooltip]="element.reason?.[0]" class="text-red-500 material-symbols-rounded">close</mat-icon>
+                    }
+                </div>
+            </td>
+        </ng-container>
+
+        <ng-container matColumnDef="size">
+            <th *matHeaderCellDef mat-header-cell> Size</th>
+            <td *matCellDef="let element" mat-cell>
+                <div>{{ element.size | bytes }}</div>
+            </td>
+        </ng-container>
+
+        <ng-container matColumnDef="updown">
+            <th *matHeaderCellDef mat-header-cell> Up & Down</th>
+            <td *matCellDef="let element" mat-cell>
+                <div class="flex flex-wrap gap-2 py-3">
+                    @if (element.valid) {
+                        <button (click)="project_up$.next(element.name)" mat-icon-button matTooltip="Start up the application like 'docker compose up'">
+                            <mat-icon class="text-green-500 material-symbols-rounded">arrow_upward</mat-icon>
+                        </button>
+                        <button (click)="project_down$.next(element.name)" mat-icon-button matTooltip="Stop the application like 'docker compose down'">
+                            <mat-icon class="text-amber-500 material-symbols-rounded">arrow_downward</mat-icon>
+                        </button>
+                    }
+                </div>
+            </td>
+        </ng-container>
+
+        <ng-container matColumnDef="updated_at">
+            <th *matHeaderCellDef mat-header-cell> Last Modified</th>
+            <td *matCellDef="let element" mat-cell>
+                <div>{{ element.mtimeMs | date: 'yyyy-MM-dd HH:mm:ss' }}</div>
+            </td>
+        </ng-container>
+
+        <ng-container matColumnDef="operation">
+            <th *matHeaderCellDef mat-header-cell> Operation</th>
+            <td *matCellDef="let element" mat-cell>
+                <div class="flex flex-wrap gap-2 py-3">
+                    <button (click)="rename_file$.next(element.name)" color="primary" mat-icon-button matTooltip="Rename file">
+                        <mat-icon class="material-symbols-rounded">edit</mat-icon>
+                    </button>
+                    <button (click)="remove_file$.next(element.name)" mat-icon-button matTooltip="Remove file">
+                        <mat-icon class="material-symbols-rounded" color="warn">delete</mat-icon>
+                    </button>
+
+                </div>
+            </td>
+        </ng-container>
+
+        <tr *matHeaderRowDef="['name', 'size', 'updown', 'updated_at', 'valid', 'operation']; sticky: true" mat-header-row></tr>
+        <tr *matRowDef="let row; columns: ['name', 'size', 'updown', 'updated_at', 'valid', 'operation'];" class="ndc-table-row" mat-row></tr>
+
+        <tr *matNoDataRow class="mat-row">
+            <td class="mat-cell" colspan="50">
+                <div class="flex justify-center items-center h-12">No project yet.</div>
+            </td>
+        </tr>
+    </table>
+</div>

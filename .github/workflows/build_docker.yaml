@@ -1,0 +1,97 @@
+name: Build Docker
+
+on:
+  merge_group:
+
+  push:
+    branches:
+      - "master"
+  pull_request:
+    branches:
+      - "**"
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  check-repo-version-job:
+    name: Check Repo Version Job
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v4
+        if: ${{ github.event_name == 'merge_group' }}
+      - uses: actions/setup-node@v4
+        if: ${{ github.event_name == 'merge_group' }}
+        with:
+          node-version: '22'
+      - name: Install Packages
+        if: ${{ github.event_name == 'merge_group' }}
+        run: yarn install --frozen-lockfile
+      - name: Execute check_repo_version.sh
+        run: |
+          set -e;
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            echo "Skip version check during pull request process.";
+            exit 0;
+          fi
+          if [ "${{ github.event_name }}" == "merge_group" ]; then
+            git config user.name 'Jiahang Cao'
+            git config user.email 'sieglive@gmail.com'
+            bash -c ./scripts/check_repo_version.sh;
+          fi
+  build-node-docker-image:
+    name: Build NDC Image
+    runs-on: ubuntu-20.04
+    needs: [
+      check-repo-version-job
+    ]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Figure file hash
+        id: figure_file_hash
+        run: |
+          NODE_NDC_CODE_HASH=$(./scripts/figure_all_packages_hash.sh)
+          echo "code_hash=${NODE_NDC_CODE_HASH}"
+          echo "code_hash=${NODE_NDC_CODE_HASH}" >> $GITHUB_OUTPUT
+
+          IMAGE_TAG=plankroot/docker-console:hash-$NODE_NDC_CODE_HASH
+          echo "image_tag=${IMAGE_TAG}"
+          echo "image_tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+      - name: Check if image exists
+        id: image_exists
+        shell: bash
+        run: |
+          if docker manifest inspect ${{ steps.figure_file_hash.outputs.image_tag }}; then
+              echo "ndc=true" >> $GITHUB_OUTPUT
+          else
+              echo "ndc=false" >> $GITHUB_OUTPUT
+          fi
+      - name: Install Packages
+        if: ${{ steps.image_exists.outputs.ndc == 'false' }}
+        run: yarn install --frozen-lockfile
+      - name: Build
+        if: ${{ steps.image_exists.outputs.ndc == 'false' }}
+        run: yarn build
+      - name: Build & Push Server
+        if: ${{ steps.image_exists.outputs.ndc == 'false' }}
+        id: build_server_docker
+        uses: docker/build-push-action@v3
+        with:
+          context: ./deploy
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
+          push: true
+          tags: ${{ steps.figure_file_hash.outputs.image_tag }}

@@ -1,0 +1,67 @@
+<div class="h-16 flex items-center justify-start gap-3 px-4">
+    <div class="text-2xl">Networks</div>
+    <div class="flex items-center justify-end gap-3 ml-auto">
+        <button (click)="prune_network$.next(null)" mat-mini-fab matTooltip="Prune unused networks.">
+            <mat-icon class="material-symbols-rounded" color="warn">cycle</mat-icon>
+        </button>
+    </div>
+</div>
+
+<mat-divider></mat-divider>
+<mat-divider></mat-divider>
+<mat-divider></mat-divider>
+
+<div class="overflow-y-auto" style="height: calc(100% - 4rem - 3px)">
+    <table [dataSource]="networks" mat-table>
+
+        <ng-container matColumnDef="name">
+            <th *matHeaderCellDef mat-header-cell> Name</th>
+            <td *matCellDef="let element" mat-cell>
+                <div class="inline-flex items-center justify-start gap-2">
+                    <div><a (click)="view_detail(element.Id)" [matTooltip]="element.Id" class="directory-link">{{ element.Name }}</a></div>
+                </div>
+            </td>
+        </ng-container>
+
+        <ng-container matColumnDef="driver">
+            <th *matHeaderCellDef mat-header-cell> Driver</th>
+            <td *matCellDef="let element" mat-cell>
+                <div>{{ element.Driver }}</div>
+            </td>
+        </ng-container>
+
+        <ng-container matColumnDef="ip">
+            <th *matHeaderCellDef mat-header-cell> Address</th>
+            <td *matCellDef="let element" mat-cell>
+                <div>{{ element.IPAM.Config?.[0]?.Gateway }}</div>
+                <div>{{ element.IPAM.Config?.[0]?.Subnet }}</div>
+            </td>
+        </ng-container>
+
+        <ng-container matColumnDef="created_at">
+            <th *matHeaderCellDef mat-header-cell> Created At</th>
+            <td *matCellDef="let element" mat-cell>
+                <div>{{ element.CreatedAt | date: 'yyyy-MM-dd HH:mm:ss' }}</div>
+            </td>
+        </ng-container>
+
+        <ng-container matColumnDef="operation">
+            <th *matHeaderCellDef mat-header-cell> Operation</th>
+            <td *matCellDef="let element" mat-cell>
+                <div class="flex flex-wrap gap-2 py-3">
+                    <button (click)="remove_network$.next({ id: element.Id })" mat-icon-button>
+                        <mat-icon class="material-symbols-rounded" color="warn">delete</mat-icon>
+                    </button>
+                </div>
+            </td>
+        </ng-container>
+
+        <tr *matHeaderRowDef="['name', 'driver', 'ip', 'created_at', 'operation']; sticky: true" mat-header-row></tr>
+        <tr *matRowDef="let row; columns: ['name', 'driver', 'ip', 'created_at', 'operation'];" class="ndc-table-row" mat-row></tr>
+        <tr *matNoDataRow class="mat-row">
+            <td class="mat-cell" colspan="50">
+                <div class="flex justify-center items-center h-12">No network yet.</div>
+            </td>
+        </tr>
+    </table>
+</div>

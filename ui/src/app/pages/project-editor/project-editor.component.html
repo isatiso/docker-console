@@ -1,0 +1,21 @@
+<div class="h-16 flex items-center justify-start gap-3 px-4">
+    <div class="flex items-baseline justify-start gap-3">
+        <div class="text-2xl">Projects</div>
+        <div class="file-link text-base flex items-center justify-start" routerLink="/projects">root</div>
+        /
+        <div>{{ filename }}</div>
+    </div>
+    <div class="flex items-center justify-end gap-3 ml-auto">
+        @if (content_changed) {
+            <button mat-flat-button color="accent" (click)="save()">Save</button>
+        }
+    </div>
+</div>
+
+<mat-divider></mat-divider>
+<mat-divider></mat-divider>
+<mat-divider></mat-divider>
+
+<div style="height: calc(100% - 4rem - 3px)" class="w-full overflow-auto">
+    <ndc-monaco-editor #version_editor style="height: 100%" [options]="{ language: lang }" [(ngModel)]="edited_content"></ndc-monaco-editor>
+</div>

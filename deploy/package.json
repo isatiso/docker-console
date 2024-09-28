@@ -1,0 +1,11 @@
+{
+    "name": "@docker-console/deploy",
+    "version": "0.0.1",
+    "main": "lib/cjs/index.js",
+    "module": "lib/mjs/index.js",
+    "types": "./lib/cjs/index.d.ts",
+    "license": "ISC",
+    "scripts": {
+        "build": "rm -rf ./lib && rollup -c && cp -r ../ui/lib/browser ./lib/ndc"
+    }
+}

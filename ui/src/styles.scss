@@ -1,0 +1,110 @@
+// Custom Theming for Angular Material
+// For more information: https://material.angular.io/guide/theming
+@use '@angular/material' as mat;
+@use './ndc-theme' as ndc-theme;
+// Plus imports for other components in your app.
+
+//@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@include mat.elevation-classes();
+@include mat.app-background();
+
+
+:root {
+    --header-background-color: #{mat.get-theme-color(ndc-theme.$light-theme, primary, 80)};
+    --divider-color: #{mat.get-theme-color(ndc-theme.$light-theme, primary, 80)};
+    --primary-text-color: #{mat.get-theme-color(ndc-theme.$light-theme, primary, 60)};
+    --primary-text-bg-color: #{mat.get-theme-color(ndc-theme.$light-theme, primary, 80)};
+
+    --mat-protected-button-horizontal-padding: 16px;
+    --mdc-protected-button-container-height: 32px;
+    --mdc-protected-button-label-text-size: 0.875rem;
+    --mat-filled-button-horizontal-padding: 16px;
+    --mdc-filled-button-container-height: 32px;
+    --mdc-filled-button-label-text-size: 0.875rem;
+    --mat-outlined-button-horizontal-padding: 16px;
+    --mdc-outlined-button-container-height: 32px;
+    --mdc-outlined-button-label-text-size: 0.875rem;
+
+    --mat-table-row-item-label-text-size: 0.875rem;
+    --mat-table-header-headline-size: 0.875rem;
+
+    --mat-form-field-container-height: 48px;
+    --mat-form-field-container-vertical-padding: 12px;
+    --mat-form-field-container-text-line-height: 1rem;
+    --mat-select-trigger-text-line-height: 1rem;
+
+    @include mat.all-component-themes(ndc-theme.$light-theme);
+    @include mat.color-variants-backwards-compatibility(ndc-theme.$light-theme);
+
+    @media (prefers-color-scheme: dark) {
+
+        --header-background-color: #{mat.get-theme-color(ndc-theme.$dark-theme, primary, 30)};
+        --divider-color: #{mat.get-theme-color(ndc-theme.$dark-theme, primary, 30)};
+        --primary-text-color: #{mat.get-theme-color(ndc-theme.$dark-theme, primary, 80)};
+        --primary-text-bg-color: #{mat.get-theme-color(ndc-theme.$dark-theme, primary, 30)};
+        color: white;
+
+        @include mat.all-component-colors(ndc-theme.$dark-theme);
+        @include mat.color-variants-backwards-compatibility(ndc-theme.$dark-theme);
+    }
+}
+
+html, body {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+.mat-mdc-form-field.fill-container,
+.mat-mdc-form-field.fill-container .mat-mdc-form-field-infix,
+.mat-mdc-form-field.fill-container .mat-mdc-form-field-flex,
+.mat-mdc-form-field.fill-container .mat-mdc-form-field-wrapper {
+    height: 100%;
+    width: 100%;
+}
+
+.mat-mdc-form-field.fill-container textarea {
+    height: 100%;
+}
+
+.mat-mdc-form-field.font-mono textarea {
+    font-family: monospace;
+}
+
+.directory-link {
+
+    color: var(--primary-text-color);
+
+    &:hover {
+        cursor: pointer;
+    }
+}
+
+.file-link {
+    color: var(--primary-text-color);
+
+    &:hover {
+        cursor: pointer;
+    }
+}
+
+.other-link {
+    &:hover {
+        cursor: pointer;
+    }
+}
+
+tr.ndc-table-row:hover {
+    background: rgba(128, 128, 128, 0.1);
+}
+
+tr.ndc-table-row:active {
+    background: var(--mat-table-background-color);
+}
+

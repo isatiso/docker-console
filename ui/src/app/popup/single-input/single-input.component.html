@@ -1,0 +1,15 @@
+<h1 mat-dialog-title>{{ title }}</h1>
+<mat-dialog-content>
+    <mat-form-field appearance="outline" style="width: 100%; padding: 8px 0">
+        <mat-label>{{ label }}</mat-label>
+        <input [(ngModel)]="data.value" [placeholder]="placeholder" [type]="type" matInput>
+        @if (suffix) {
+            <div matSuffix class="text-zinc-500 mr-3">{{ suffix }}</div>
+        }
+        <mat-hint>{{ hint }}</mat-hint>
+    </mat-form-field>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+    <button mat-dialog-close mat-raised-button>Cancel</button>
+    <button [mat-dialog-close]="data.value" color="primary" mat-raised-button>Confirm</button>
+</mat-dialog-actions>
