@@ -47,6 +47,7 @@ jobs:
       - name: Build
         run: yarn build
       - name: Upload Artifact
+        if: ${{ github.event_name == 'workflow_dispatch' }}
         uses: actions/upload-artifact@v3
         with:
           name: deploy-files
