@@ -14,8 +14,8 @@ defaults:
     shell: bash
 
 jobs:
-  check-repo-version-job:
-    name: Check Repo Version Job
+  check-version:
+    name: Check Repository Version
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4
@@ -33,8 +33,8 @@ jobs:
               git fetch origin;
               bash -c ./scripts/check_repo_version.sh;
           fi
-  build-node-docker-image:
-    name: Build NDC Image
+  compile:
+    name: Compile
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4
@@ -42,6 +42,25 @@ jobs:
         with:
           node-version: '22'
           cache: 'yarn'
+      - name: Install Packages
+        run: yarn install --frozen-lockfile
+      - name: Build
+        run: yarn build
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: deploy-files
+          path: ./deploy/lib
+  build-docker-image:
+    name: Build Docker Image
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: deploy-files
       - name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
@@ -66,12 +85,6 @@ jobs:
           else
               echo "ndc=false" >> $GITHUB_OUTPUT
           fi
-      - name: Install Packages
-        if: ${{ steps.image_exists.outputs.ndc == 'false' }}
-        run: yarn install --frozen-lockfile
-      - name: Build
-        if: ${{ steps.image_exists.outputs.ndc == 'false' }}
-        run: yarn build
       - name: Set up QEMU
         if: ${{ steps.image_exists.outputs.ndc == 'false' }}
         uses: docker/setup-qemu-action@v2
