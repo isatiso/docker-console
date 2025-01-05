@@ -26,13 +26,14 @@ jobs:
           node-version: '22'
       - name: Install Packages
         if: ${{ github.event_name == 'pull_request' }}
-        run: yarn install --frozen-lockfile
+        run: yarn add compare-versions@6.1.0
       - name: Execute check_repo_version.sh
         run: |
           set -e;
           if [ "${{ github.event_name }}" == "pull_request" ]; then
-              git config user.name 'Jiahang Cao'
-              git config user.email 'sieglive@gmail.com'
+              git config user.name 'Jiahang Cao';
+              git config user.email 'sieglive@gmail.com';
+              git fetch origin;
               bash -c ./scripts/check_repo_version.sh;
           fi
   build-node-docker-image:
