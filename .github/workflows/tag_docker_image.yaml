@@ -27,9 +27,9 @@ jobs:
       - name: Figure file hash
         id: figure_file_hash
         run: |
-          FRONT_NODE_CODE_HASH=$(./scripts/figure_all_packages_hash.sh)
-          echo "${FRONT_NODE_CODE_HASH}"
-          echo "code_hash=${FRONT_NODE_CODE_HASH}" >> $GITHUB_OUTPUT
+          NODE_NDC_CODE_HASH=$(./scripts/figure_all_packages_hash.sh)
+          echo "${NODE_NDC_CODE_HASH}"
+          echo "code_hash=${NODE_NDC_CODE_HASH}" >> $GITHUB_OUTPUT
 
           REPO_VERSION=$(cat package.json | jq -r '.version')
           echo "repo_version=${REPO_VERSION}"
