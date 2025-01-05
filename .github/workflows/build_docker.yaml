@@ -1,8 +1,6 @@
 name: Build Docker
 
 on:
-  merge_group:
-
   push:
     branches:
       - "master"
@@ -21,32 +19,23 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4
-        if: ${{ github.event_name == 'merge_group' }}
+        if: ${{ github.event_name == 'pull_request' }}
       - uses: actions/setup-node@v4
-        if: ${{ github.event_name == 'merge_group' }}
+        if: ${{ github.event_name == 'pull_request' }}
         with:
           node-version: '22'
-      - name: Install Packages
-        if: ${{ github.event_name == 'merge_group' }}
-        run: yarn install --frozen-lockfile
       - name: Execute check_repo_version.sh
         run: |
           set -e;
           if [ "${{ github.event_name }}" == "pull_request" ]; then
-            echo "Skip version check during pull request process.";
-            exit 0;
-          fi
-          if [ "${{ github.event_name }}" == "merge_group" ]; then
-            git config user.name 'Jiahang Cao'
-            git config user.email 'sieglive@gmail.com'
-            bash -c ./scripts/check_repo_version.sh;
+              git config user.name 'Jiahang Cao';
+              git config user.email 'sieglive@gmail.com';
+              git fetch origin;
+              bash -c ./scripts/check_repo_version.sh;
           fi
   build-node-docker-image:
     name: Build NDC Image
     runs-on: ubuntu-20.04
-    needs: [
-      check-repo-version-job
-    ]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

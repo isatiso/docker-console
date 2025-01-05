@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { compareVersions } = require('compare-versions')
+const { compareVersions } = require('./compare-versions')
 
 const compare_result = compareVersions(process.env.MASTER_VERSION, process.env.CURRENT_VERSION)
 
