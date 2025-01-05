@@ -19,9 +19,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4
-        if: ${{ github.event_name == 'pull_request' }}
       - uses: actions/setup-node@v4
-        if: ${{ github.event_name == 'pull_request' }}
         with:
           node-version: '22'
       - name: Execute check_repo_version.sh
