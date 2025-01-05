@@ -73,14 +73,14 @@ jobs:
           fi
       - name: Set up QEMU
         if: ${{ github.event_name == 'workflow_dispatch' && steps.image_exists.outputs.ndc == 'false' }}
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
         if: ${{ github.event_name == 'workflow_dispatch' && steps.image_exists.outputs.ndc == 'false' }}
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
       - name: Build & Push Docker Image
         if: ${{ github.event_name == 'workflow_dispatch' && steps.image_exists.outputs.ndc == 'false' }}
         id: build_server_docker
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v6
         with:
           context: ./deploy
           platforms: linux/amd64,linux/arm64,linux/arm/v7
