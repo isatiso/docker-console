@@ -224,7 +224,7 @@ export class DockerRouter {
                     ),
                 ).pipe(
                     takeUntil(fromEvent(res.data!, 'end')),
-                    finalize(() => res.data!.close()),
+                    finalize(() => res.data!.destroy()),
                 )
             }),
             bufferTime(200),

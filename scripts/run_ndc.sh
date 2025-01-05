@@ -4,7 +4,6 @@ set -e
 
 NDC_PORT=7293
 CONFIG_PATH="/etc/docker-console"
-DATA_PATH="/docker-console"
 CONTAINER_NAME="docker-console"
 VERSION="latest"
 
@@ -77,8 +76,8 @@ echo "VERSION=$VERSION"
 echo "NDC_PORT=$NDC_PORT"
 echo "POSITIONAL_ARGS=${POSITIONAL_ARGS[*]}"
 
-mkdir -r -p "$DATA_PATH"
-mkdir -r -p "$CONFIG_PATH"
+mkdir -p "$DATA_PATH"
+mkdir -p "$CONFIG_PATH"
 
 NDC_IMAGE="plankroot/docker-console:$VERSION"
 
@@ -99,11 +98,8 @@ docker run -d --restart always \
 -l com.docker-console.project=docker-console \
 -l com.docker-console.version="$VERSION" \
 -l com.docker-console.config-path="$CONFIG_PATH" \
--l com.docker-console.data-path="$DATA_PATH" \
 -e HOST_CONFIG_PATH="$CONFIG_PATH" \
--e HOST_DATA_PATH="$DATA_PATH" \
 -v /var/run/docker.sock:/var/run/docker.sock \
 -v "$CONFIG_PATH":/etc/node-docker-console \
--v "$DATA_PATH":/docker-console \
 -p "$NDC_PORT:7293" \
 "$NDC_IMAGE"
