@@ -52,20 +52,24 @@ jobs:
           else
               echo "ndc=false" >> $GITHUB_OUTPUT
           fi
-      - name: Tag Image By the Repo Version
+
+      - name: Install Packages
         if: ${{ steps.image_exists.outputs.ndc == 'false' }}
-        run: |
-          set -e;
-          if docker pull ${{ steps.figure_file_hash.outputs.image_tag }}; then
-              echo "node=true" >> $GITHUB_OUTPUT;
-          else
-              echo "Node Image ${{ steps.figure_file_hash.outputs.image_tag }} not exists" ;
-              exit 1;
-          fi
-          docker tag ${{ steps.figure_file_hash.outputs.image_tag }} ${{ steps.figure_file_hash.outputs.image_version_tag }}
-          docker push ${{ steps.figure_file_hash.outputs.image_version_tag }}
-          docker tag ${{ steps.figure_file_hash.outputs.image_tag }} plankroot/docker-console:latest
-          docker push plankroot/docker-console:latest
+        run: yarn install --frozen-lockfile
+      - name: Build
+        if: ${{ steps.image_exists.outputs.ndc == 'false' }}
+        run: yarn build
+      - name: Build & Push Server
+        if: ${{ steps.image_exists.outputs.ndc == 'false' }}
+        id: build_server_docker
+        uses: docker/build-push-action@v3
+        with:
+          context: ./deploy
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
+          push: true
+          tags:
+            - ${{ steps.figure_file_hash.outputs.image_version_tag }}
+            - plankroot/docker-console:latest
 
       - name: Tag Commit If Not Exists
         run: |
