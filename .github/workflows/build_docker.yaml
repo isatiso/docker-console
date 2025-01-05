@@ -24,6 +24,7 @@ jobs:
         if: ${{ github.event_name == 'pull_request' }}
         with:
           node-version: '22'
+          cache: 'yarn'
       - name: Execute check_repo_version.sh
         run: |
           set -e;
