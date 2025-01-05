@@ -11,8 +11,8 @@ defaults:
     shell: bash
 
 jobs:
-  check-repo-version-job:
-    name: Tag Docker Image
+  release:
+    name: Build & Push Docker Image with Version Tags
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4
