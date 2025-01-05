@@ -14,3 +14,4 @@ function figure_hash_of_packages() {
 }
 
 figure_hash_of_packages | sort | md5sum | awk '{print $1}'
+
