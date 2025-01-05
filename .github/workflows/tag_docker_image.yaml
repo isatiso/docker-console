@@ -72,9 +72,7 @@ jobs:
           context: ./deploy
           platforms: linux/amd64,linux/arm64,linux/arm/v7
           push: true
-          tags:
-            - ${{ steps.figure_file_hash.outputs.image_version_tag }}
-            - plankroot/docker-console:latest
+          tags: ${{ steps.figure_file_hash.outputs.image_version_tag }},plankroot/docker-console:latest
 
       - name: Tag Commit If Not Exists
         run: |
