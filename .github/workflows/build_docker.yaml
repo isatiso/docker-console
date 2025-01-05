@@ -14,14 +14,12 @@ defaults:
     shell: bash
 
 jobs:
-  check-repo-version-job:
-    name: Check Repo Version Job
+  check-version:
+    name: Check Repository Version
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4
-        if: ${{ github.event_name == 'pull_request' }}
       - uses: actions/setup-node@v4
-        if: ${{ github.event_name == 'pull_request' }}
         with:
           node-version: '22'
       - name: Execute check_repo_version.sh
@@ -33,24 +31,27 @@ jobs:
               git fetch origin;
               bash -c ./scripts/check_repo_version.sh;
           fi
-  build-node-docker-image:
-    name: Build NDC Image
+  build-docker-image:
+    name: Build Docker Image
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: 'yarn'
+      - name: Install Packages
+        run: yarn install --frozen-lockfile
+      - name: Build Project
+        run: yarn build
       - name: Login to Docker Hub
+        if: ${{ github.event_name == 'workflow_dispatch' }}
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
       - name: Figure file hash
+        if: ${{ github.event_name == 'workflow_dispatch' }}
         id: figure_file_hash
         run: |
           NODE_NDC_CODE_HASH=$(./scripts/figure_all_packages_hash.sh)
@@ -61,6 +62,7 @@ jobs:
           echo "image_tag=${IMAGE_TAG}"
           echo "image_tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
       - name: Check if image exists
+        if: ${{ github.event_name == 'workflow_dispatch' }}
         id: image_exists
         shell: bash
         run: |
@@ -69,14 +71,14 @@ jobs:
           else
               echo "ndc=false" >> $GITHUB_OUTPUT
           fi
-      - name: Install Packages
-        if: ${{ steps.image_exists.outputs.ndc == 'false' }}
-        run: yarn install --frozen-lockfile
-      - name: Build
-        if: ${{ steps.image_exists.outputs.ndc == 'false' }}
-        run: yarn build
-      - name: Build & Push Server
-        if: ${{ steps.image_exists.outputs.ndc == 'false' }}
+      - name: Set up QEMU
+        if: ${{ github.event_name == 'workflow_dispatch' && steps.image_exists.outputs.ndc == 'false' }}
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        if: ${{ github.event_name == 'workflow_dispatch' && steps.image_exists.outputs.ndc == 'false' }}
+        uses: docker/setup-buildx-action@v2
+      - name: Build & Push Docker Image
+        if: ${{ github.event_name == 'workflow_dispatch' && steps.image_exists.outputs.ndc == 'false' }}
         id: build_server_docker
         uses: docker/build-push-action@v3
         with:

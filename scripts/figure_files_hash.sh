@@ -4,10 +4,6 @@ set -e
 
 TARGET_PATH=${1:-.}
 
-if ! [ -f "$TARGET_PATH/package.json" ]; then
-  exit 0
-fi
-
 find "$TARGET_PATH" -type f \
 ! -path '*/.*' \
 ! -path "$TARGET_PATH/lib/*" \
