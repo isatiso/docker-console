@@ -33,8 +33,8 @@ jobs:
               git fetch origin;
               bash -c ./scripts/check_repo_version.sh;
           fi
-  compile:
-    name: Compile
+  build-docker-image:
+    name: Build Docker Image
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4
@@ -46,30 +46,14 @@ jobs:
         run: yarn install --frozen-lockfile
       - name: Build
         run: yarn build
-      - name: Upload Artifact
-        if: ${{ github.event_name == 'workflow_dispatch' }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: deploy-files
-          path: ./deploy/lib
-  build-docker-image:
-    name: Build Docker Image
-    needs:
-      - compile
-    if: ${{ github.event_name == 'workflow_dispatch' }}
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v4
-      - name: Download artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: deploy-files
       - name: Login to Docker Hub
+        if: ${{ github.event_name == 'workflow_dispatch' }}
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Figure file hash
+        if: ${{ github.event_name == 'workflow_dispatch' }}
         id: figure_file_hash
         run: |
           NODE_NDC_CODE_HASH=$(./scripts/figure_all_packages_hash.sh)
@@ -80,6 +64,7 @@ jobs:
           echo "image_tag=${IMAGE_TAG}"
           echo "image_tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
       - name: Check if image exists
+        if: ${{ github.event_name == 'workflow_dispatch' }}
         id: image_exists
         shell: bash
         run: |
@@ -89,13 +74,13 @@ jobs:
               echo "ndc=false" >> $GITHUB_OUTPUT
           fi
       - name: Set up QEMU
-        if: ${{ steps.image_exists.outputs.ndc == 'false' }}
+        if: ${{ github.event_name == 'workflow_dispatch' && steps.image_exists.outputs.ndc == 'false' }}
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
-        if: ${{ steps.image_exists.outputs.ndc == 'false' }}
+        if: ${{ github.event_name == 'workflow_dispatch' && steps.image_exists.outputs.ndc == 'false' }}
         uses: docker/setup-buildx-action@v2
       - name: Build & Push Server
-        if: ${{ steps.image_exists.outputs.ndc == 'false' }}
+        if: ${{ github.event_name == 'workflow_dispatch' && steps.image_exists.outputs.ndc == 'false' }}
         id: build_server_docker
         uses: docker/build-push-action@v3
         with:
