@@ -215,7 +215,6 @@ export class DockerRouter {
             })),
             filter(res => !!res),
             switchMap(res => {
-                console.log(res.data)
                 return merge(
                     fromEvent<Buffer>(res.data!, 'data'),
                     fromEvent(res.data!, 'error').pipe(
