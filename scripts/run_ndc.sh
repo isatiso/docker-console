@@ -77,8 +77,8 @@ echo "VERSION=$VERSION"
 echo "NDC_PORT=$NDC_PORT"
 echo "POSITIONAL_ARGS=${POSITIONAL_ARGS[*]}"
 
-mkdir -r -p "$DATA_PATH"
-mkdir -r -p "$CONFIG_PATH"
+mkdir -p "$DATA_PATH"
+mkdir -p "$CONFIG_PATH"
 
 NDC_IMAGE="plankroot/docker-console:$VERSION"
 
