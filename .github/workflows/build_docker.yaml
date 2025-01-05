@@ -54,6 +54,8 @@ jobs:
           path: ./deploy/lib
   build-docker-image:
     name: Build Docker Image
+    needs:
+      - compile
     if: ${{ github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-20.04
     steps:
