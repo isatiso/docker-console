@@ -26,7 +26,7 @@ jobs:
           node-version: '22'
       - name: Install Packages
         if: ${{ github.event_name == 'pull_request' }}
-        run: yarn add compare-versions@6.1.0
+        run: yarn add -DW compare-versions@6.1.0
       - name: Execute check_repo_version.sh
         run: |
           set -e;
