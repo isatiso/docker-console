@@ -13,7 +13,7 @@ import { BehaviorSubject, distinctUntilChanged, filter, finalize, forkJoin, from
 import * as tar from 'tar'
 
 const if_catch = (desc: string) => <T extends AxiosError>(err: T) => {
-    logger.debug('Error occurred when %s: %s %d %O', desc, err.message, err.response?.status, err.response?.data)
+    logger.debug('Error occurred when %s: %s %d %O', desc, err.message, err.response?.status ?? 0, err.response?.data ?? {})
     throw err
 }
 

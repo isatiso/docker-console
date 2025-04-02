@@ -13,6 +13,9 @@
         }
     </div>
     <div class="flex items-center justify-end gap-3 ml-auto">
+        <button (click)="download$.next()" color="primary" mat-mini-fab matTooltip="Download selected files" [disabled]="selection.isEmpty()">
+            <mat-icon class="material-symbols-rounded">download</mat-icon>
+        </button>
         <button (click)="create_file$.next()" color="primary" mat-mini-fab matTooltip="Create new file">
             <mat-icon class="material-symbols-rounded">note_add</mat-icon>
         </button>
@@ -28,6 +31,21 @@
 
 <div class="overflow-y-auto" style="height: calc(100% - 4rem - 3px)">
     <table [dataSource]="files" mat-table>
+
+        <ng-container matColumnDef="select">
+            <th mat-header-cell *matHeaderCellDef>
+                <mat-checkbox (change)="$event ? toggleAllRows() : null"
+                              [checked]="selection.hasValue() && isAllSelected()"
+                              [indeterminate]="selection.hasValue() && !isAllSelected()">
+                </mat-checkbox>
+            </th>
+            <td mat-cell *matCellDef="let row">
+                <mat-checkbox (click)="$event.stopPropagation()"
+                              (change)="$event ? selection.toggle(row) : null"
+                              [checked]="selection.isSelected(row)">
+                </mat-checkbox>
+            </td>
+        </ng-container>
 
         <ng-container matColumnDef="name">
             <th *matHeaderCellDef mat-header-cell></th>
@@ -91,8 +109,8 @@
             </td>
         </ng-container>
 
-        <tr *matHeaderRowDef="['name', 'type', 'size', 'updated_at', 'operation']; sticky: true" mat-header-row></tr>
-        <tr *matRowDef="let row; columns: ['name', 'type', 'size', 'updated_at', 'operation'];" class="ndc-table-row" mat-row></tr>
+        <tr *matHeaderRowDef="['select', 'name', 'type', 'size', 'updated_at', 'operation']; sticky: true" mat-header-row></tr>
+        <tr *matRowDef="let row; columns: ['select', 'name', 'type', 'size', 'updated_at', 'operation'];" class="ndc-table-row" mat-row></tr>
 
         <tr *matNoDataRow class="mat-row">
             <td class="mat-cell" colspan="5">

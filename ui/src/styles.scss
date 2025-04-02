@@ -11,13 +11,7 @@
 @include mat.elevation-classes();
 @include mat.app-background();
 
-
-:root {
-    --header-background-color: #{mat.get-theme-color(ndc-theme.$light-theme, primary, 80)};
-    --divider-color: #{mat.get-theme-color(ndc-theme.$light-theme, primary, 80)};
-    --primary-text-color: #{mat.get-theme-color(ndc-theme.$light-theme, primary, 60)};
-    --primary-text-bg-color: #{mat.get-theme-color(ndc-theme.$light-theme, primary, 80)};
-
+@mixin override-theme() {
     --mat-protected-button-horizontal-padding: 16px;
     --mdc-protected-button-container-height: 32px;
     --mdc-protected-button-label-text-size: 0.875rem;
@@ -28,6 +22,8 @@
     --mdc-outlined-button-container-height: 32px;
     --mdc-outlined-button-label-text-size: 0.875rem;
 
+    --mdc-icon-button-state-layer-size: 28px;
+
     --mat-table-row-item-label-text-size: 0.875rem;
     --mat-table-header-headline-size: 0.875rem;
 
@@ -35,11 +31,23 @@
     --mat-form-field-container-vertical-padding: 12px;
     --mat-form-field-container-text-line-height: 1rem;
     --mat-select-trigger-text-line-height: 1rem;
+}
+
+
+:root {
+    --header-background-color: #{mat.get-theme-color(ndc-theme.$light-theme, primary, 80)};
+    --divider-color: #{mat.get-theme-color(ndc-theme.$light-theme, primary, 80)};
+    --primary-text-color: #{mat.get-theme-color(ndc-theme.$light-theme, primary, 60)};
+    --primary-text-bg-color: #{mat.get-theme-color(ndc-theme.$light-theme, primary, 80)};
+
+    @include override-theme();
 
     @include mat.all-component-themes(ndc-theme.$light-theme);
     @include mat.color-variants-backwards-compatibility(ndc-theme.$light-theme);
 
     @media (prefers-color-scheme: dark) {
+
+        @include override-theme();
 
         --header-background-color: #{mat.get-theme-color(ndc-theme.$dark-theme, primary, 30)};
         --divider-color: #{mat.get-theme-color(ndc-theme.$dark-theme, primary, 30)};

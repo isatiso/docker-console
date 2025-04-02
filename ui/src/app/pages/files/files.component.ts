@@ -1,8 +1,10 @@
+import { SelectionModel } from '@angular/cdk/collections'
 import { DatePipe } from '@angular/common'
 import { HttpClient } from '@angular/common/http'
 import { Component } from '@angular/core'
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop'
 import { MatIconButton, MatMiniFabButton } from '@angular/material/button'
+import { MatCheckbox } from '@angular/material/checkbox'
 import { MatDivider } from '@angular/material/divider'
 import { MatIcon } from '@angular/material/icon'
 import { MatTableModule } from '@angular/material/table'
@@ -24,6 +26,7 @@ import { PopupService } from '../../popup/popup.service'
         MatTableModule,
         MatIconButton,
         BytesPipe,
+        MatCheckbox,
     ],
     templateUrl: './files.component.html',
     styleUrl: './files.component.scss'
@@ -34,12 +37,15 @@ export class FilesComponent {
     dir_arr: { name: string, path: string }[] = []
     files: { type: 'file' | 'directory' | 'other', name: string }[] = []
 
+    selection = new SelectionModel<{ type: 'file' | 'directory' | 'other', name: string }>(true, [])
+
     list_files$ = new Subject<string>()
     rename_file$ = new Subject<string>()
     remove_file$ = new Subject<string>()
     remove_dir$ = new Subject<string>()
     create_file$ = new Subject<void>()
     create_dir$ = new Subject<void>()
+    download$ = new Subject<string | void>()
 
     constructor(
         private _http: HttpClient,
@@ -47,6 +53,10 @@ export class FilesComponent {
         private _route: ActivatedRoute,
         private popup: PopupService,
     ) {
+        this.download$.pipe(
+            tap(() => console.log(this.selection.selected)),
+            takeUntilDestroyed(),
+        ).subscribe()
         this.list_files$.pipe(
             switchMap(dir => this._http.post<{ data: { files: { type: 'file' | 'directory' | 'other', name: string }[] } }>('/ndc_api/file/ls', { dir })),
             map(res => res.data.files),
@@ -127,6 +137,21 @@ export class FilesComponent {
             tap(() => this.list_files$.next(this.current_dir)),
             takeUntilDestroyed(),
         ).subscribe()
+    }
+
+    isAllSelected() {
+        const numSelected = this.selection.selected.length
+        const numRows = this.files.length
+        return numSelected === numRows
+    }
+
+    toggleAllRows() {
+        if (this.isAllSelected()) {
+            this.selection.clear()
+            return
+        }
+
+        this.selection.select(...this.files)
     }
 
     navigate(name: string) {
