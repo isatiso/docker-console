@@ -56,7 +56,7 @@ export class NdcFileService {
         }
     }
 
-    zip(dir: string): stream.Transform {
+    async zip(dir: string): Promise<stream.Transform> {
         if (this._file_lock) {
             throw new Error('Loading config in progress')
         }
@@ -67,7 +67,7 @@ export class NdcFileService {
             const pass_through = new stream.PassThrough()
             archive.pipe(pass_through)
             archive.directory(filepath, false)
-            void archive.finalize()
+            await archive.finalize()
             return pass_through
         } catch (e: any) {
             if (e.code === 'ENOENT') {
