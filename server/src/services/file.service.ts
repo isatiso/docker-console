@@ -1,7 +1,8 @@
-import { DockerDef, FileDesc, projects_validator } from '@docker-console/common'
+import { DockerDef, FileDesc, FileType, projects_validator } from '@docker-console/common'
 import { TpConfigData, TpService } from '@tarpit/core'
 import { throw_not_found } from '@tarpit/http'
-import fs from 'node:fs/promises'
+import fsp from 'node:fs/promises'
+import fs from 'node:fs'
 import path from 'node:path'
 import { switchMap, takeUntil } from 'rxjs'
 import stream from 'stream'
@@ -39,7 +40,7 @@ export class NdcFileService {
                 await this.load_single_project(name)
             } else {
                 const project_data: typeof this.projects = {}
-                const files = await fs.readdir(path.join(this.data_path, 'projects'), { withFileTypes: true })
+                const files = await fsp.readdir(path.join(this.data_path, 'projects'), { withFileTypes: true })
                 for (const s of files) {
                     if (s.isFile() && s.name.endsWith(`.project.yml`)) {
                         const name = s.name.replace(`.project.yml`, '')
@@ -86,7 +87,7 @@ export class NdcFileService {
         this._file_lock = true
         const filepath = path.join(this.data_path, dir, filename)
         try {
-            return await fs.readFile(filepath)
+            return await fsp.readFile(filepath)
         } catch (e: any) {
             if (e.code === 'ENOENT') {
                 throw_not_found(`File not found: ${filepath}`)
@@ -110,7 +111,7 @@ export class NdcFileService {
         this._file_lock = true
         try {
             const filepath = path.join(this.data_path, dir, filename)
-            await fs.writeFile(filepath, content)
+            await fsp.writeFile(filepath, content)
         } catch (e: any) {
             throw e
         } finally {
@@ -131,7 +132,7 @@ export class NdcFileService {
         try {
             const old_filepath = path.join(this.data_path, dir, filename)
             const new_filepath = path.join(this.data_path, dir, new_name)
-            await fs.rename(old_filepath, new_filepath)
+            await fsp.rename(old_filepath, new_filepath)
         } finally {
             this._file_lock = false
         }
@@ -144,7 +145,7 @@ export class NdcFileService {
         this._file_lock = true
         try {
             const filepath = path.join(this.data_path, dir, filename)
-            await fs.rm(filepath, { recursive: true, force: true })
+            await fsp.rm(filepath, { recursive: true, force: true })
         } finally {
             this._file_lock = false
         }
@@ -156,7 +157,7 @@ export class NdcFileService {
         }
         this._file_lock = true
         try {
-            await fs.stat(path.join(this.data_path, target))
+            await fsp.stat(path.join(this.data_path, target))
             return true
         } catch (e) {
             return false
@@ -172,12 +173,12 @@ export class NdcFileService {
         this._file_lock = true
         try {
             const filepath = path.join(this.data_path, dir)
-            const files = await fs.readdir(filepath, { withFileTypes: true })
+            const files = await fsp.readdir(filepath, { withFileTypes: true })
             return await Promise.all(files.map(async f => {
                 return {
                     name: f.name,
-                    type: f.isFile() ? 'file' : f.isDirectory() ? 'dir' : 'other',
-                    ...(await fs.stat(path.join(filepath, f.name)))
+                    type: this.extract_type(f),
+                    ...(await fsp.stat(path.join(filepath, f.name)))
                 }
             }))
         } finally {
@@ -192,7 +193,7 @@ export class NdcFileService {
         this._file_lock = true
         try {
             const filepath = path.join(this.data_path, dir)
-            await fs.rm(filepath, { recursive: true, force: true })
+            await fsp.rm(filepath, { recursive: true, force: true })
         } finally {
             this._file_lock = false
         }
@@ -205,7 +206,7 @@ export class NdcFileService {
         this._file_lock = true
         try {
             const filepath = path.join(this.data_path, dir)
-            await fs.mkdir(filepath, { recursive: true })
+            await fsp.mkdir(filepath, { recursive: true })
         } finally {
             this._file_lock = false
         }
@@ -215,7 +216,7 @@ export class NdcFileService {
         project_data = project_data ?? this.projects
         let stats
         try {
-            stats = await fs.stat(path.join(this.data_path, 'projects', `${name}.project.yml`))
+            stats = await fsp.stat(path.join(this.data_path, 'projects', `${name}.project.yml`))
             if (!stats.isFile()) {
                 delete project_data[name]
                 return
@@ -228,7 +229,7 @@ export class NdcFileService {
                 throw e
             }
         }
-        const content = await fs.readFile(path.join(this.data_path, 'projects', `${name}.project.yml`), { encoding: 'utf-8' })
+        const content = await fsp.readFile(path.join(this.data_path, 'projects', `${name}.project.yml`), { encoding: 'utf-8' })
         try {
             const def = yaml.parse(content, {})
             const valid = projects_validator(def)
@@ -239,5 +240,30 @@ export class NdcFileService {
         } catch (e) {
             // TODO: warning log
         }
+    }
+
+    private extract_type(d: fs.Dirent): FileType {
+        if (d.isFile()) {
+            return 'file'
+        }
+        if (d.isDirectory()) {
+            return 'directory'
+        }
+        if (d.isBlockDevice()) {
+            return 'block'
+        }
+        if (d.isCharacterDevice()) {
+            return 'character'
+        }
+        if (d.isSymbolicLink()) {
+            return 'link'
+        }
+        if (d.isFIFO()) {
+            return 'fifo'
+        }
+        if (d.isSocket()) {
+            return 'socket'
+        }
+        return 'unknown'
     }
 }

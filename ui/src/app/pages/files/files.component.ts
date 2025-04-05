@@ -10,6 +10,7 @@ import { MatIcon } from '@angular/material/icon'
 import { MatTableModule } from '@angular/material/table'
 import { MatTooltip } from '@angular/material/tooltip'
 import { ActivatedRoute, Router, RouterLink } from '@angular/router'
+import { FileDesc } from '@docker-console/common'
 import { filter, map, of, Subject, switchMap, tap, throttleTime } from 'rxjs'
 import { BytesPipe } from '../../pipes/bytes.pipe'
 import { PopupService } from '../../popup/popup.service'
@@ -35,9 +36,9 @@ export class FilesComponent {
 
     current_dir = '/'
     dir_arr: { name: string, path: string }[] = []
-    files: { type: 'file' | 'directory' | 'other', name: string }[] = []
+    files: FileDesc[] = []
 
-    selection = new SelectionModel<{ type: 'file' | 'directory' | 'other', name: string }>(true, [])
+    selection = new SelectionModel<FileDesc>(true, [])
 
     list_files$ = new Subject<string>()
     rename_file$ = new Subject<string>()
@@ -85,7 +86,7 @@ export class FilesComponent {
             takeUntilDestroyed(),
         ).subscribe()
         this.list_files$.pipe(
-            switchMap(dir => this._http.post<{ data: { files: { type: 'file' | 'directory' | 'other', name: string }[] } }>('/ndc_api/file/ls', { dir })),
+            switchMap(dir => this._http.post<{ data: { files: FileDesc[] } }>('/ndc_api/file/ls', { dir })),
             map(res => res.data.files),
             map(files => files.sort((a, b) => a.type.localeCompare(b.type) || a.name.localeCompare(b.name))),
             tap(files => this.files = files),

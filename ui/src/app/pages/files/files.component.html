@@ -13,9 +13,6 @@
         }
     </div>
     <div class="flex items-center justify-end gap-3 ml-auto">
-<!--        <button (click)="download_target$.next()" [disabled]="selection.isEmpty()" color="primary" mat-mini-fab matTooltip="Download selected files">-->
-<!--            <mat-icon class="material-symbols-rounded">download</mat-icon>-->
-<!--        </button>-->
         <button (click)="create_file$.next()" color="primary" mat-mini-fab matTooltip="Create new file">
             <mat-icon class="material-symbols-rounded">note_add</mat-icon>
         </button>
@@ -51,7 +48,7 @@
             <th *matHeaderCellDef mat-header-cell></th>
             <td *matCellDef="let element" mat-cell>
                 <div class="inline-flex items-center justify-start gap-2">
-                    @if (element.type === 'dir') {
+                    @if (element.type === 'directory') {
                         <mat-icon class="text-green-500 material-symbols-rounded">folder</mat-icon>
                         <div><a class="directory-link" (click)="navigate(current_dir + element.name + '/')">{{ element.name }}</a></div>
                     } @else if (element.type === 'file') {
@@ -90,33 +87,39 @@
             <th *matHeaderCellDef mat-header-cell> Operation</th>
             <td *matCellDef="let element" mat-cell>
                 <div class="flex flex-wrap gap-2 py-3">
-                    @if (element.type === 'dir') {
-                        <button mat-icon-button matTooltip="Download selected files" color="primary" (click)="download_dir$.next(element.name)">
-                            <mat-icon class="material-symbols-rounded">download</mat-icon>
-                        </button>
-                        <button mat-icon-button matTooltip="Rename Directory" color="primary" (click)="rename_file$.next(element.name)">
-                            <mat-icon class="material-symbols-rounded">edit</mat-icon>
-                        </button>
-                        <button mat-icon-button matTooltip="Remove Directory" (click)="remove_dir$.next(element.name)">
-                            <mat-icon color="warn" class="material-symbols-rounded">delete</mat-icon>
-                        </button>
-                    } @else if (element.type === 'file') {
-                        <button mat-icon-button matTooltip="Download selected files" color="primary" (click)="download_file$.next(element.name)">
-                            <mat-icon class="material-symbols-rounded">download</mat-icon>
-                        </button>
-                        <button mat-icon-button matTooltip="Rename File" color="primary" (click)="rename_file$.next(element.name)">
-                            <mat-icon class="material-symbols-rounded">edit</mat-icon>
-                        </button>
-                        <button mat-icon-button matTooltip="Remove File" (click)="remove_file$.next(element.name)">
-                            <mat-icon color="warn" class="material-symbols-rounded">delete</mat-icon>
-                        </button>
+                    @switch (element.type) {
+                        @case ('directory') {
+                            <button mat-icon-button matTooltip="Download selected files" color="primary" (click)="download_dir$.next(element.name)">
+                                <mat-icon class="material-symbols-rounded">download</mat-icon>
+                            </button>
+                            <button mat-icon-button matTooltip="Rename Directory" color="primary" (click)="rename_file$.next(element.name)">
+                                <mat-icon class="material-symbols-rounded">edit</mat-icon>
+                            </button>
+                            <button mat-icon-button matTooltip="Remove Directory" (click)="remove_dir$.next(element.name)">
+                                <mat-icon color="warn" class="material-symbols-rounded">delete</mat-icon>
+                            </button>
+                        }
+                        @case ('file') {
+                            <button mat-icon-button matTooltip="Download selected files" color="primary" (click)="download_file$.next(element.name)">
+                                <mat-icon class="material-symbols-rounded">download</mat-icon>
+                            </button>
+                            <button mat-icon-button matTooltip="Rename File" color="primary" (click)="rename_file$.next(element.name)">
+                                <mat-icon class="material-symbols-rounded">edit</mat-icon>
+                            </button>
+                            <button mat-icon-button matTooltip="Remove File" (click)="remove_file$.next(element.name)">
+                                <mat-icon color="warn" class="material-symbols-rounded">delete</mat-icon>
+                            </button>
+                        }
+                        @default {
+
+                        }
                     }
                 </div>
             </td>
         </ng-container>
 
-        <tr *matHeaderRowDef="['select', 'name', 'type', 'size', 'updated_at', 'operation']; sticky: true" mat-header-row></tr>
-        <tr *matRowDef="let row; columns: ['select', 'name', 'type', 'size', 'updated_at', 'operation'];" class="ndc-table-row" mat-row></tr>
+        <tr *matHeaderRowDef="['name', 'type', 'size', 'updated_at', 'operation']; sticky: true" mat-header-row></tr>
+        <tr *matRowDef="let row; columns: ['name', 'type', 'size', 'updated_at', 'operation'];" class="ndc-table-row" mat-row></tr>
 
         <tr *matNoDataRow class="mat-row">
             <td class="mat-cell" colspan="5">
