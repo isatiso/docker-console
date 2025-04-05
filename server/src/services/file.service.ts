@@ -1,10 +1,13 @@
 import { DockerDef, FileDesc, projects_validator } from '@docker-console/common'
 import { TpConfigData, TpService } from '@tarpit/core'
+import { throw_not_found } from '@tarpit/http'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { switchMap, takeUntil } from 'rxjs'
+import stream from 'stream'
 import yaml from 'yaml'
 import { DockerService } from './docker.service'
+import archiver from 'archiver'
 
 /**
  * Manage local files, include services and other files
@@ -52,30 +55,72 @@ export class NdcFileService {
         }
     }
 
-    async read(dir: string, filename: string) {
+    zip(dir: string): stream.Transform {
         if (this._file_lock) {
             throw new Error('Loading config in progress')
         }
         this._file_lock = true
+        const filepath = path.join(this.data_path, dir)
         try {
-            const filepath = path.join(this.data_path, dir, filename)
-            return await fs.readFile(filepath, { encoding: 'utf-8' })
+            const archive = archiver('zip', { zlib: { level: 9 } })
+            const pass_through = new stream.PassThrough()
+            archive.pipe(pass_through)
+            archive.directory(filepath, false)
+            void archive.finalize()
+            return pass_through
+        } catch (e: any) {
+            if (e.code === 'ENOENT') {
+                throw_not_found(`File not found: ${filepath}`)
+            } else {
+                throw e
+            }
         } finally {
             this._file_lock = false
         }
     }
 
-    async write(dir: string, filename: string, content: string) {
+    async read(dir: string, filename: string) {
+        if (this._file_lock) {
+            throw new Error('Loading config in progress')
+        }
+        this._file_lock = true
+        const filepath = path.join(this.data_path, dir, filename)
+        try {
+            return await fs.readFile(filepath)
+        } catch (e: any) {
+            if (e.code === 'ENOENT') {
+                throw_not_found(`File not found: ${filepath}`)
+            } else {
+                throw e
+            }
+        } finally {
+            this._file_lock = false
+        }
+    }
+
+    async read_text(dir: string, filename: string, options?: { encoding?: BufferEncoding }) {
+        const encoding = options?.encoding ?? 'utf-8'
+        return this.read(dir, filename).then(data => data.toString(encoding))
+    }
+
+    async write(dir: string, filename: string, content: Buffer) {
         if (this._file_lock) {
             throw new Error('Loading config in progress')
         }
         this._file_lock = true
         try {
             const filepath = path.join(this.data_path, dir, filename)
-            await fs.writeFile(filepath, content, { encoding: 'utf-8' })
+            await fs.writeFile(filepath, content)
+        } catch (e: any) {
+            throw e
         } finally {
             this._file_lock = false
         }
+    }
+
+    async write_text(dir: string, filename: string, content: string, options?: { encoding?: BufferEncoding }) {
+        const encoding = options?.encoding ?? 'utf-8'
+        return await this.write(dir, filename, Buffer.from(content, encoding))
     }
 
     async rename(dir: string, filename: string, new_name: string) {

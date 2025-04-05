@@ -87,7 +87,7 @@ export class ProjectsComponent implements OnInit {
             switchMap(() => this.popup.input({ title: `Create File`, label: 'Filename', value: '', suffix: `.project.yml` })),
             filter(value => !!value),
             map(value => value + `.project.yml`),
-            switchMap(filename => this._http.post<{ data: null }>('/ndc_api/file/write', { category: 'projects', filename, content: '' })),
+            switchMap(filename => this._http.post<{ data: null }>('/ndc_api/file/write_text', { category: 'projects', filename, content: '' })),
             tap(() => this.list_files$.next()),
             takeUntilDestroyed(),
         ).subscribe()

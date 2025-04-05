@@ -54,7 +54,7 @@ export class FileEditorComponent implements OnInit, OnDestroy {
         private route: ActivatedRoute,
     ) {
         this.get_file_content$.pipe(
-            switchMap(() => this._http.post<{ data: { content: string } }>('/ndc_api/file/read', { dir: this.dir, filename: this.filename })),
+            switchMap(() => this._http.post<{ data: { content: string } }>('/ndc_api/file/read_text', { dir: this.dir, filename: this.filename })),
             tap(res => {
                 this.content = res.data.content
                 this.edited_content = this.content
@@ -106,7 +106,7 @@ export class FileEditorComponent implements OnInit, OnDestroy {
     }
 
     save() {
-        this._http.post('/ndc_api/file/write', {
+        this._http.post('/ndc_api/file/write_text', {
             dir: this.dir,
             filename: this.filename,
             content: this.edited_content

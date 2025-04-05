@@ -1,7 +1,8 @@
 import { DockerDef, FileDesc, NdcResponse } from '@docker-console/common'
-import { JsonBody, Post, TpRouter } from '@tarpit/http'
+import { JsonBody, Params, Post, RawBody, throw_bad_request, TpRouter } from '@tarpit/http'
 import { Jtl } from '@tarpit/judge'
 import path from 'node:path'
+import stream from 'node:stream'
 import package_json from '../pkg.json'
 import { NdcFileService } from '../services/file.service'
 
@@ -67,7 +68,35 @@ export class FileRouter {
     }
 
     @Post()
-    async read(body: JsonBody<{
+    async zip(params: Params<{
+        category?: string
+        dir?: string
+    }>): Promise<stream.Stream> {
+        const cat = params.get_first('category') || 'data'
+        const dir = params.get_first('dir') || '/'
+        if (cat !== 'projects' && cat !== 'data') {
+            throw_bad_request('category must be data or projects')
+        }
+        return this.file.zip(path.join(cat, dir))
+    }
+
+    @Post()
+    async read(params: Params<{
+        category?: string
+        dir?: string
+        filename: string
+    }>): Promise<Buffer> {
+        const filename = params.ensure('filename', Jtl.non_empty_string)
+        const cat = params.get_first('category') || 'data'
+        const dir = params.get_first('dir') || '/'
+        if (cat !== 'projects' && cat !== 'data') {
+            throw_bad_request('category must be data or projects')
+        }
+        return this.file.read(path.join(cat, dir), filename)
+    }
+
+    @Post()
+    async read_text(body: JsonBody<{
         category?: string
         dir?: string
         filename: string
@@ -75,12 +104,31 @@ export class FileRouter {
         const cat = body.get_if('category', /data|projects/, 'data')
         const dir = body.get_if('dir', Jtl.non_empty_string, '/')
         const filename = body.ensure('filename', Jtl.non_empty_string)
-        const content = await this.file.read(path.join(cat, dir), filename)
+        const content = await this.file.read_text(path.join(cat, dir), filename)
         return { status: 'success', data: { content } }
     }
 
     @Post()
-    async write(body: JsonBody<{
+    async write(params: Params<{
+        category?: string
+        dir?: string
+        filename: string
+    }>, content: RawBody): Promise<NdcResponse<null>> {
+        const cat = params.get_first('category') || 'data'
+        const dir = params.get_first('dir') || '/'
+        const filename = params.ensure('filename', Jtl.non_empty_string)
+        if (cat !== 'projects' && cat !== 'data') {
+            throw_bad_request('category must be data or projects')
+        }
+        await this.file.write(path.join(cat, dir), filename, content)
+        if (cat === 'projects') {
+            await this.file.load_projects(filename.replace(`.project.yml`, ''))
+        }
+        return { status: 'success', data: null }
+    }
+
+    @Post()
+    async write_text(body: JsonBody<{
         category?: string
         dir?: string
         filename: string
@@ -90,7 +138,7 @@ export class FileRouter {
         const dir = body.get_if('dir', Jtl.non_empty_string, '/')
         const filename = body.ensure('filename', Jtl.non_empty_string)
         const content = body.ensure('content', Jtl.string)
-        await this.file.write(path.join(cat, dir), filename, content)
+        await this.file.write_text(path.join(cat, dir), filename, content)
         if (cat === 'projects') {
             await this.file.load_projects(filename.replace(`.project.yml`, ''))
         }

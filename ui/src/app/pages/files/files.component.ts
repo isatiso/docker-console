@@ -10,7 +10,7 @@ import { MatIcon } from '@angular/material/icon'
 import { MatTableModule } from '@angular/material/table'
 import { MatTooltip } from '@angular/material/tooltip'
 import { ActivatedRoute, Router, RouterLink } from '@angular/router'
-import { filter, map, Subject, switchMap, tap } from 'rxjs'
+import { filter, map, of, Subject, switchMap, tap, throttleTime } from 'rxjs'
 import { BytesPipe } from '../../pipes/bytes.pipe'
 import { PopupService } from '../../popup/popup.service'
 
@@ -45,7 +45,8 @@ export class FilesComponent {
     remove_dir$ = new Subject<string>()
     create_file$ = new Subject<void>()
     create_dir$ = new Subject<void>()
-    download$ = new Subject<string | void>()
+    download_dir$ = new Subject<string>()
+    download_file$ = new Subject<string>()
 
     constructor(
         private _http: HttpClient,
@@ -53,8 +54,34 @@ export class FilesComponent {
         private _route: ActivatedRoute,
         private popup: PopupService,
     ) {
-        this.download$.pipe(
-            tap(() => console.log(this.selection.selected)),
+        this.download_file$.pipe(
+            throttleTime(800),
+            switchMap(filename => of(null).pipe(
+                switchMap(() => this._http.post('/ndc_api/file/read', {}, { params: { dir: this.current_dir, filename }, responseType: 'blob' })),
+                tap(blob => {
+                    const url = window.URL.createObjectURL(blob)
+                    const a = document.createElement('a')
+                    a.href = url
+                    a.download = filename
+                    a.click()
+                    window.URL.revokeObjectURL(url)
+                }),
+            )),
+            takeUntilDestroyed(),
+        ).subscribe()
+        this.download_dir$.pipe(
+            throttleTime(800),
+            switchMap(filename => of(null).pipe(
+                switchMap(() => this._http.post('/ndc_api/file/zip', {}, { params: { dir: this.current_dir + '/' + filename }, responseType: 'blob' })),
+                tap(blob => {
+                    const url = window.URL.createObjectURL(blob)
+                    const a = document.createElement('a')
+                    a.href = url
+                    a.download = filename + '.zip'
+                    a.click()
+                    window.URL.revokeObjectURL(url)
+                }),
+            )),
             takeUntilDestroyed(),
         ).subscribe()
         this.list_files$.pipe(
@@ -108,7 +135,7 @@ export class FilesComponent {
         this.create_file$.pipe(
             switchMap(() => this.popup.input({ title: `Create File`, label: 'Filename', value: '' }).pipe(
                 filter(value => !!value),
-                switchMap(value => this._http.post<{ data: null }>('/ndc_api/file/write', {
+                switchMap(value => this._http.post<{ data: null }>('/ndc_api/file/write_text', {
                     dir: this.current_dir,
                     filename: value,
                     content: ''

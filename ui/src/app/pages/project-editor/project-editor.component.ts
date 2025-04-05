@@ -52,7 +52,7 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
         private route: ActivatedRoute,
     ) {
         this.get_file_content$.pipe(
-            switchMap(() => this._http.post<{ data: { content: string } }>('/ndc_api/file/read', { category: 'projects', dir: '/', filename: this.filename })),
+            switchMap(() => this._http.post<{ data: { content: string } }>('/ndc_api/file/read_text', { category: 'projects', dir: '/', filename: this.filename })),
             tap(res => this.content = res.data.content),
             tap(res => this.edited_content = this.content),
             tap(res => console.log(this.content)),
@@ -98,7 +98,7 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
     }
 
     save() {
-        this._http.post('/ndc_api/file/write', {
+        this._http.post('/ndc_api/file/write_text', {
             category: 'projects',
             dir: '/',
             filename: this.filename,
