@@ -14,6 +14,7 @@ import { FileDesc } from '@docker-console/common'
 import { filter, map, of, Subject, switchMap, tap, throttleTime } from 'rxjs'
 import { BytesPipe } from '../../pipes/bytes.pipe'
 import { PopupService } from '../../popup/popup.service'
+import { ToolsService } from '../../services/tools.service'
 
 @Component({
     selector: 'ndc-files',
@@ -52,6 +53,7 @@ export class FilesComponent {
     constructor(
         private _http: HttpClient,
         private _router: Router,
+        private _tools: ToolsService,
         private _route: ActivatedRoute,
         private popup: PopupService,
     ) {
@@ -158,7 +160,7 @@ export class FilesComponent {
         ).subscribe()
         this._route.params.pipe(
             tap(params => {
-                this.current_dir = params['dir'] ? atob(params['dir']) : '/'
+                this.current_dir = params['dir'] ? this._tools.base64_decode(params['dir']) : '/'
                 const dir_arr = this.current_dir.split('/').filter(Boolean)
                 this.dir_arr = dir_arr.map((_, i) => ({ name: dir_arr[i], path: '/' + dir_arr.slice(0, i + 1).join('/') }))
             }),
@@ -183,10 +185,10 @@ export class FilesComponent {
     }
 
     navigate(name: string) {
-        this._router.navigate(['/files', btoa(name)]).then()
+        this._router.navigate(['/files', this._tools.base64_encode(name)]).then()
     }
 
     go_edit(name: string) {
-        this._router.navigate(['/files-edit', btoa(name)]).then()
+        this._router.navigate(['/files-edit', this._tools.base64_encode(name)]).then()
     }
 }

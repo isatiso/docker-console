@@ -4,7 +4,7 @@ import archiver from 'archiver'
 import fs from 'node:fs'
 import fsp from 'node:fs/promises'
 import path from 'node:path'
-import { concatMap, of, Subject, switchMap, takeUntil, tap } from 'rxjs'
+import { concatMap, finalize, of, Subject, switchMap, takeUntil, tap } from 'rxjs'
 import stream from 'stream'
 import yaml from 'yaml'
 import { FileLocker } from '../helpers/file-lock'
@@ -20,7 +20,7 @@ export class NdcFileService {
     projects: Record<string, DockerDef.DefinitionStat> = {}
     private _file_locker = new FileLocker()
     private _load_projects$ = new Subject<[name?: string, resolve?: () => void, reject?: (err: any) => void]>()
-    private _pending_task:  [name?: string, resolve?: () => void, reject?: (err: any) => void][] = []
+    private _pending_task: [name?: string, resolve?: () => void, reject?: (err: any) => void][] = []
 
     constructor(
         private _config: TpConfigData,
@@ -32,7 +32,10 @@ export class NdcFileService {
                 switchMap(() => this._load_projects(name, resolve, reject)),
                 tap(() => this._pending_task.shift()),
             )),
-            takeUntil(this._docker.off$),
+            finalize(() => {
+                this._pending_task.forEach(task => task[1]?.())
+                this._pending_task = []
+            }),
         ).subscribe()
         this._docker.on$.pipe(
             tap(() => this._load_projects$.next([])),
@@ -40,7 +43,7 @@ export class NdcFileService {
         ).subscribe()
     }
 
-    async load_project(name?: string) {
+    async load_projects(name?: string) {
         return new Promise<void>((resolve, reject) => {
             this._load_projects$.next([name, resolve, reject])
         })

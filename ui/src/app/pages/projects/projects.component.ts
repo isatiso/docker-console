@@ -12,6 +12,7 @@ import { DockerDef } from '@docker-console/common'
 import { filter, map, Subject, switchMap, tap } from 'rxjs'
 import { BytesPipe } from '../../pipes/bytes.pipe'
 import { PopupService } from '../../popup/popup.service'
+import { ToolsService } from '../../services/tools.service'
 
 interface DefinitionsResponse {
     data: Record<string, DockerDef.DefinitionStat>
@@ -47,6 +48,7 @@ export class ProjectsComponent implements OnInit {
     constructor(
         private _http: HttpClient,
         private _router: Router,
+        private _tools: ToolsService,
         private _route: ActivatedRoute,
         private popup: PopupService,
     ) {
@@ -115,6 +117,6 @@ export class ProjectsComponent implements OnInit {
     }
 
     go_edit(name: string) {
-        this._router.navigate(['/projects', btoa(name)]).then()
+        this._router.navigate(['/projects', this._tools.base64_encode(name)]).then()
     }
 }
