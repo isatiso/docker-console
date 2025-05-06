@@ -104,8 +104,8 @@ export class FileRouter {
         const cat = body.get_if('category', /data|projects/, 'data')
         const dir = body.get_if('dir', Jtl.non_empty_string, '/')
         const filename = body.ensure('filename', Jtl.non_empty_string)
-        const content = await this.file.read_text(path.join(cat, dir), filename)
-        return { status: 'success', data: { content } }
+        const content = await this.file.read(path.join(cat, dir), filename)
+        return { status: 'success', data: { content: content.toString('utf8') } }
     }
 
     @Post()
@@ -138,7 +138,7 @@ export class FileRouter {
         const dir = body.get_if('dir', Jtl.non_empty_string, '/')
         const filename = body.ensure('filename', Jtl.non_empty_string)
         const content = body.ensure('content', Jtl.string)
-        await this.file.write_text(path.join(cat, dir), filename, content)
+        await this.file.write(path.join(cat, dir), filename, Buffer.from(content, 'utf8'))
         if (cat === 'projects') {
             await this.file.load_projects(filename.replace(`.project.yml`, ''))
         }

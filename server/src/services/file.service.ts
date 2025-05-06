@@ -1,14 +1,14 @@
 import { DockerDef, FileDesc, FileType, projects_validator } from '@docker-console/common'
 import { TpConfigData, TpService } from '@tarpit/core'
-import { throw_not_found } from '@tarpit/http'
-import fsp from 'node:fs/promises'
+import archiver from 'archiver'
 import fs from 'node:fs'
+import fsp from 'node:fs/promises'
 import path from 'node:path'
-import { switchMap, takeUntil } from 'rxjs'
+import { concatMap, of, Subject, switchMap, takeUntil, tap } from 'rxjs'
 import stream from 'stream'
 import yaml from 'yaml'
+import { FileLocker } from '../helpers/file-lock'
 import { DockerService } from './docker.service'
-import archiver from 'archiver'
 
 /**
  * Manage local files, include services and other files
@@ -18,201 +18,134 @@ export class NdcFileService {
 
     readonly data_path = this._config.get('ndc.data_path')
     projects: Record<string, DockerDef.DefinitionStat> = {}
-    private _file_lock = false
+    private _file_locker = new FileLocker()
+    private _load_projects$ = new Subject<[name?: string, resolve?: () => void, reject?: (err: any) => void]>()
+    private _pending_task:  [name?: string, resolve?: () => void, reject?: (err: any) => void][] = []
 
     constructor(
         private _config: TpConfigData,
         private _docker: DockerService,
     ) {
+        this._load_projects$.pipe(
+            tap(task => this._pending_task.push(task)),
+            concatMap(([name, resolve, reject]) => of(null).pipe(
+                switchMap(() => this._load_projects(name, resolve, reject)),
+                tap(() => this._pending_task.shift()),
+            )),
+            takeUntil(this._docker.off$),
+        ).subscribe()
         this._docker.on$.pipe(
-            switchMap(() => this.load_projects()),
+            tap(() => this._load_projects$.next([])),
             takeUntil(this._docker.off$),
         ).subscribe()
     }
 
-    async load_projects(name?: string) {
-        if (this._file_lock) {
-            throw new Error('Loading config in progress')
-        }
-        this._file_lock = true
-        try {
-            if (name) {
-                await this.load_single_project(name)
-            } else {
-                const project_data: typeof this.projects = {}
-                const files = await fsp.readdir(path.join(this.data_path, 'projects'), { withFileTypes: true })
-                for (const s of files) {
-                    if (s.isFile() && s.name.endsWith(`.project.yml`)) {
-                        const name = s.name.replace(`.project.yml`, '')
-                        await this.load_single_project(name, project_data)
-                    } else if (s.isDirectory()) {
-                        // TODO: deal with directory
-                    }
-                }
-                this.projects = project_data
-            }
-        } finally {
-            this._file_lock = false
-        }
+    async load_project(name?: string) {
+        return new Promise<void>((resolve, reject) => {
+            this._load_projects$.next([name, resolve, reject])
+        })
     }
 
     async zip(dir: string): Promise<stream.Transform> {
-        if (this._file_lock) {
-            throw new Error('Loading config in progress')
-        }
-        this._file_lock = true
         const filepath = path.join(this.data_path, dir)
-        try {
+        return this._file_locker.with_read_lock([filepath], async () => {
             const archive = archiver('zip', { zlib: { level: 9 } })
             const pass_through = new stream.PassThrough()
             archive.pipe(pass_through)
             archive.directory(filepath, false)
             await archive.finalize()
             return pass_through
-        } catch (e: any) {
-            if (e.code === 'ENOENT') {
-                throw_not_found(`File not found: ${filepath}`)
-            } else {
-                throw e
-            }
-        } finally {
-            this._file_lock = false
-        }
+        })
     }
 
     async read(dir: string, filename: string) {
-        if (this._file_lock) {
-            throw new Error('Loading config in progress')
-        }
-        this._file_lock = true
         const filepath = path.join(this.data_path, dir, filename)
-        try {
+        return this._file_locker.with_read_lock([filepath], async () => {
             return await fsp.readFile(filepath)
-        } catch (e: any) {
-            if (e.code === 'ENOENT') {
-                throw_not_found(`File not found: ${filepath}`)
-            } else {
-                throw e
-            }
-        } finally {
-            this._file_lock = false
-        }
-    }
-
-    async read_text(dir: string, filename: string, options?: { encoding?: BufferEncoding }) {
-        const encoding = options?.encoding ?? 'utf-8'
-        return this.read(dir, filename).then(data => data.toString(encoding))
+        })
     }
 
     async write(dir: string, filename: string, content: Buffer) {
-        if (this._file_lock) {
-            throw new Error('Loading config in progress')
-        }
-        this._file_lock = true
-        try {
-            const filepath = path.join(this.data_path, dir, filename)
+        const filepath = path.join(this.data_path, dir, filename)
+        return this._file_locker.with_write_lock([filepath], async () => {
             await fsp.writeFile(filepath, content)
-        } catch (e: any) {
-            throw e
-        } finally {
-            this._file_lock = false
-        }
-    }
-
-    async write_text(dir: string, filename: string, content: string, options?: { encoding?: BufferEncoding }) {
-        const encoding = options?.encoding ?? 'utf-8'
-        return await this.write(dir, filename, Buffer.from(content, encoding))
+        })
     }
 
     async rename(dir: string, filename: string, new_name: string) {
-        if (this._file_lock) {
-            throw new Error('Loading config in progress')
-        }
-        this._file_lock = true
-        try {
-            const old_filepath = path.join(this.data_path, dir, filename)
-            const new_filepath = path.join(this.data_path, dir, new_name)
+        const old_filepath = path.join(this.data_path, dir, filename)
+        const new_filepath = path.join(this.data_path, dir, new_name)
+        return this._file_locker.with_write_lock([old_filepath, new_filepath], async () => {
             await fsp.rename(old_filepath, new_filepath)
-        } finally {
-            this._file_lock = false
-        }
+        })
     }
 
     async rm(dir: string, filename: string) {
-        if (this._file_lock) {
-            throw new Error('Loading config in progress')
-        }
-        this._file_lock = true
-        try {
-            const filepath = path.join(this.data_path, dir, filename)
+        const filepath = path.join(this.data_path, dir, filename)
+        return this._file_locker.with_write_lock([filepath], async () => {
             await fsp.rm(filepath, { recursive: true, force: true })
-        } finally {
-            this._file_lock = false
-        }
+        })
     }
 
     async exists(target: string) {
-        if (this._file_lock) {
-            throw new Error('Loading config in progress')
-        }
-        this._file_lock = true
-        try {
-            await fsp.stat(path.join(this.data_path, target))
+        const filepath = path.join(this.data_path, target)
+        return await this._file_locker.with_read_lock([filepath], async () => {
+            await fsp.stat(filepath)
             return true
-        } catch (e) {
-            return false
-        } finally {
-            this._file_lock = false
-        }
+        }).catch(() => false)
     }
 
     async ls(dir: string): Promise<FileDesc[]> {
-        if (this._file_lock) {
-            throw new Error('Loading config in progress')
-        }
-        this._file_lock = true
-        try {
-            const filepath = path.join(this.data_path, dir)
+        const filepath = path.join(this.data_path, dir)
+        return this._file_locker.with_read_lock([filepath], async () => {
             const files = await fsp.readdir(filepath, { withFileTypes: true })
-            return await Promise.all(files.map(async f => {
-                return {
-                    name: f.name,
-                    type: this.extract_type(f),
-                    ...(await fsp.stat(path.join(filepath, f.name)))
-                }
-            }))
-        } finally {
-            this._file_lock = false
-        }
+            return Promise.all(files.map(async f => ({
+                name: f.name,
+                type: this.extract_type(f),
+                ...(await fsp.stat(path.join(filepath, f.name)))
+            })))
+        })
     }
 
     async rmdir(dir: string) {
-        if (this._file_lock) {
-            throw new Error('Loading config in progress')
-        }
-        this._file_lock = true
-        try {
-            const filepath = path.join(this.data_path, dir)
+        const filepath = path.join(this.data_path, dir)
+        return this._file_locker.with_write_lock([filepath], async () => {
             await fsp.rm(filepath, { recursive: true, force: true })
-        } finally {
-            this._file_lock = false
-        }
+        })
     }
 
     async mkdir(dir: string) {
-        if (this._file_lock) {
-            throw new Error('Loading config in progress')
-        }
-        this._file_lock = true
-        try {
-            const filepath = path.join(this.data_path, dir)
+        const filepath = path.join(this.data_path, dir)
+        return this._file_locker.with_write_lock([filepath], async () => {
             await fsp.mkdir(filepath, { recursive: true })
-        } finally {
-            this._file_lock = false
+        })
+    }
+
+    private async _load_projects(name?: string, resolve?: () => void, reject?: (err: any) => void) {
+        try {
+            if (name) {
+                await this._load_single_project(name)
+            } else {
+                const project_data: typeof this.projects = {}
+                const files = await fsp.readdir(path.join(this.data_path, 'projects'), { withFileTypes: true })
+                for (const s of files) {
+                    if (s.isFile() && s.name.endsWith(`.project.yml`)) {
+                        const name = s.name.replace(`.project.yml`, '')
+                        await this._load_single_project(name, project_data)
+                    } else if (s.isDirectory()) {
+                        // TODO: deal with directory
+                    }
+                }
+                this.projects = project_data
+            }
+            resolve?.()
+        } catch (e: any) {
+            reject?.(e)
+            logger.debug(`Fail to load project ${name}: %O`, e)
         }
     }
 
-    private async load_single_project(name: string, project_data?: typeof this.projects) {
+    private async _load_single_project(name: string, project_data?: typeof this.projects) {
         project_data = project_data ?? this.projects
         let stats
         try {
