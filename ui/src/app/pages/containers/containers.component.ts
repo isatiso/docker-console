@@ -53,7 +53,7 @@ export class ContainersComponent implements OnInit {
             takeUntilDestroyed(),
         ).subscribe()
         this.fetch_containers$.pipe(
-            switchMap(() => webSocket<Record<string, DockerApi.ContainerDetail>>(`ws://${location.host}/ndc_api/docker/subscribe_containers`).pipe(
+            switchMap(() => webSocket<Record<string, DockerApi.ContainerDetail>>(`//${location.host}/ndc_api/docker/subscribe_containers`).pipe(
                 tap(detail_map => {
                     this.containers = Object.values(detail_map)
                         .map(c => ({

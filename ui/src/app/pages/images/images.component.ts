@@ -51,7 +51,7 @@ export class ImagesComponent {
             takeUntilDestroyed(),
         ).subscribe()
         this.fetch_images$.pipe(
-            switchMap(() => webSocket<Record<string, DockerApi.ImageDetail>>(`ws://${location.host}/ndc_api/docker/subscribe_images`).pipe(
+            switchMap(() => webSocket<Record<string, DockerApi.ImageDetail>>(`//${location.host}/ndc_api/docker/subscribe_images`).pipe(
                 tap(detail_map => {
                     this.images = Object.values(detail_map)
                         .map(c => ({
