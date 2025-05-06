@@ -1,11 +1,12 @@
 import { DockerApi, DockerDef, LABEL } from '@docker-console/common'
 import { TpService } from '@tarpit/core'
+import path from 'node:path'
 import { catchError, of, Subject, switchMap, tap } from 'rxjs'
 import { network_def_to_parameters, service_def_to_parameters, volume_def_to_parameters } from '../helpers/docker-helpers'
 import package_json from '../pkg.json'
 import { DockerService } from './docker.service'
-import { NdcFileService } from './file.service'
 import { DownloadService } from './download.service'
+import { NdcFileService } from './file.service'
 
 @TpService()
 export class ManagerService {
@@ -18,6 +19,7 @@ export class ManagerService {
         private docker: DockerService,
         private pulling_service: DownloadService,
     ) {
+        process.env['NDC_DATA_PATH'] = path.join(this.file.data_path, '/data')
         this.project_up$.pipe(
             switchMap(({ name, resolve, reject }) => of(null).pipe(
                 switchMap(() => this.project_up(name)),
@@ -34,39 +36,6 @@ export class ManagerService {
                 tap(err => reject(err)),
             )),
         ).subscribe()
-    }
-
-    private preprocess_project_parameters(project_name: string) {
-        const project = this.file.projects[project_name]
-        if (!project) {
-            throw new Error(`Project ${project_name} not found`)
-        }
-        if (!project.valid) {
-            throw new Error(`The definition of project ${project_name} is invalid`)
-        }
-
-        const referenced_networks: Record<string, DockerDef.DefinitionsNetwork> = {}
-        const referenced_volumes: Record<string, DockerDef.DefinitionsVolume> = {}
-        const services = Object.entries(project.def.services)
-            .map(([service_name, service]) => {
-                const { volumes, networks, ...services } = service_def_to_parameters(
-                    service_name,
-                    project_name,
-                    service,
-                    project.def.volumes ?? {},
-                    project.def.networks ?? {},
-                )
-                Object.assign(referenced_networks, networks)
-                Object.assign(referenced_volumes, volumes)
-                return services
-            })
-
-        return {
-            project,
-            volumes: referenced_volumes,
-            networks: referenced_networks,
-            services
-        }
     }
 
     async project_up(project_name: string) {
@@ -180,5 +149,38 @@ export class ManagerService {
             }
         }
         return true
+    }
+
+    private preprocess_project_parameters(project_name: string) {
+        const project = this.file.projects[project_name]
+        if (!project) {
+            throw new Error(`Project ${project_name} not found`)
+        }
+        if (!project.valid) {
+            throw new Error(`The definition of project ${project_name} is invalid`)
+        }
+
+        const referenced_networks: Record<string, DockerDef.DefinitionsNetwork> = {}
+        const referenced_volumes: Record<string, DockerDef.DefinitionsVolume> = {}
+        const services = Object.entries(project.def.services)
+            .map(([service_name, service]) => {
+                const { volumes, networks, ...services } = service_def_to_parameters(
+                    service_name,
+                    project_name,
+                    service,
+                    project.def.volumes ?? {},
+                    project.def.networks ?? {},
+                )
+                Object.assign(referenced_networks, networks)
+                Object.assign(referenced_volumes, volumes)
+                return services
+            })
+
+        return {
+            project,
+            volumes: referenced_volumes,
+            networks: referenced_networks,
+            services
+        }
     }
 }
