@@ -40,7 +40,7 @@ export class DockerService {
             switchMap(() => webSocket<
                 | { type: 'progress', data: PullImageProgress }
                 | { type: 'queue', data: { queue: PullImageProgress[], current: PullImageProgress | undefined, history: PullImageProgress[] } }
-            >(`ws://${location.host}/ndc_api/docker/pull_progress`)),
+            >(`//${location.host}/ndc_api/docker/pull_progress`)),
             tap(({ type, data }) => {
                 if (type === 'progress') {
                     this.progress = data

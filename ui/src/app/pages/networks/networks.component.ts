@@ -43,7 +43,7 @@ export class NetworksComponent implements OnInit {
         private popup: PopupService,
     ) {
         this.fetch_networks$.pipe(
-            switchMap(() => webSocket<Record<string, DockerApi.NetworkDetail>>(`ws://${location.host}/ndc_api/docker/subscribe_networks`).pipe(
+            switchMap(() => webSocket<Record<string, DockerApi.NetworkDetail>>(`//${location.host}/ndc_api/docker/subscribe_networks`).pipe(
                 tap(detail_map => {
                     this.networks = Object.values(detail_map)
                         .map(c => ({

@@ -41,7 +41,7 @@ export class VolumesComponent implements OnInit {
         private popup: PopupService,
     ) {
         this.fetch_volumes$.pipe(
-            switchMap(() => webSocket<Record<string, DockerApi.VolumeDetail>>(`ws://${location.host}/ndc_api/docker/subscribe_volumes`).pipe(
+            switchMap(() => webSocket<Record<string, DockerApi.VolumeDetail>>(`//${location.host}/ndc_api/docker/subscribe_volumes`).pipe(
                 tap(detail_map => {
                     this.volumes = Object.values(detail_map)
                         .map(c => ({
