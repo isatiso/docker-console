@@ -29,11 +29,26 @@
 <div class="overflow-y-auto" style="height: calc(100% - 4rem - 3px)">
     <table [dataSource]="files" mat-table>
 
+        <ng-container matColumnDef="select">
+            <th *matHeaderCellDef mat-header-cell>
+                <mat-checkbox (change)="$event ? toggleAllRows() : null"
+                              [checked]="selection.hasValue() && isAllSelected()"
+                              [indeterminate]="selection.hasValue() && !isAllSelected()">
+                </mat-checkbox>
+            </th>
+            <td *matCellDef="let row" mat-cell>
+                <mat-checkbox (change)="$event ? selection.toggle(row) : null"
+                              (click)="$event.stopPropagation()"
+                              [checked]="selection.isSelected(row)">
+                </mat-checkbox>
+            </td>
+        </ng-container>
+
         <ng-container matColumnDef="name">
             <th *matHeaderCellDef mat-header-cell></th>
             <td *matCellDef="let element" mat-cell>
                 <div class="inline-flex items-center justify-start gap-2">
-                    @if (element.type === 'dir') {
+                    @if (element.type === 'directory') {
                         <mat-icon class="text-green-500 material-symbols-rounded">folder</mat-icon>
                         <div><a class="directory-link" (click)="navigate(current_dir + element.name + '/')">{{ element.name }}</a></div>
                     } @else if (element.type === 'file') {
@@ -72,20 +87,32 @@
             <th *matHeaderCellDef mat-header-cell> Operation</th>
             <td *matCellDef="let element" mat-cell>
                 <div class="flex flex-wrap gap-2 py-3">
-                    @if (element.type === 'dir') {
-                        <button mat-icon-button matTooltip="Rename Directory" color="primary" (click)="rename_file$.next(element.name)">
-                            <mat-icon class="material-symbols-rounded">edit</mat-icon>
-                        </button>
-                        <button mat-icon-button matTooltip="Remove Directory" (click)="remove_dir$.next(element.name)">
-                            <mat-icon color="warn" class="material-symbols-rounded">delete</mat-icon>
-                        </button>
-                    } @else if (element.type === 'file') {
-                        <button mat-icon-button matTooltip="Rename File" color="primary" (click)="rename_file$.next(element.name)">
-                            <mat-icon class="material-symbols-rounded">edit</mat-icon>
-                        </button>
-                        <button mat-icon-button matTooltip="Remove File" (click)="remove_file$.next(element.name)">
-                            <mat-icon color="warn" class="material-symbols-rounded">delete</mat-icon>
-                        </button>
+                    @switch (element.type) {
+                        @case ('directory') {
+                            <button mat-icon-button matTooltip="Download selected files" color="primary" (click)="download_dir$.next(element.name)">
+                                <mat-icon class="material-symbols-rounded">download</mat-icon>
+                            </button>
+                            <button mat-icon-button matTooltip="Rename Directory" color="primary" (click)="rename_file$.next(element.name)">
+                                <mat-icon class="material-symbols-rounded">edit</mat-icon>
+                            </button>
+                            <button mat-icon-button matTooltip="Remove Directory" (click)="remove_dir$.next(element.name)">
+                                <mat-icon color="warn" class="material-symbols-rounded">delete</mat-icon>
+                            </button>
+                        }
+                        @case ('file') {
+                            <button mat-icon-button matTooltip="Download selected files" color="primary" (click)="download_file$.next(element.name)">
+                                <mat-icon class="material-symbols-rounded">download</mat-icon>
+                            </button>
+                            <button mat-icon-button matTooltip="Rename File" color="primary" (click)="rename_file$.next(element.name)">
+                                <mat-icon class="material-symbols-rounded">edit</mat-icon>
+                            </button>
+                            <button mat-icon-button matTooltip="Remove File" (click)="remove_file$.next(element.name)">
+                                <mat-icon color="warn" class="material-symbols-rounded">delete</mat-icon>
+                            </button>
+                        }
+                        @default {
+
+                        }
                     }
                 </div>
             </td>

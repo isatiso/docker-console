@@ -9,6 +9,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router'
 import type * as monaco from 'monaco-editor'
 import { filter, Subject, switchMap, tap } from 'rxjs'
 import { MonacoEditorComponent } from '../../monaco/monaco-editor.component'
+import { ToolsService } from '../../services/tools.service'
 import { VersionService } from '../../services/version.service'
 
 @Component({
@@ -50,11 +51,12 @@ export class FileEditorComponent implements OnInit, OnDestroy {
         private _http: HttpClient,
         private _location: Location,
         private _router: Router,
+        private _tools: ToolsService,
         public versions: VersionService,
         private route: ActivatedRoute,
     ) {
         this.get_file_content$.pipe(
-            switchMap(() => this._http.post<{ data: { content: string } }>('/ndc_api/file/read', { dir: this.dir, filename: this.filename })),
+            switchMap(() => this._http.post<{ data: { content: string } }>('/ndc_api/file/read_text', { dir: this.dir, filename: this.filename })),
             tap(res => {
                 this.content = res.data.content
                 this.edited_content = this.content
@@ -64,7 +66,7 @@ export class FileEditorComponent implements OnInit, OnDestroy {
         ).subscribe()
         this.route.params.pipe(
             tap(params => {
-                const location = atob(params['location']).split('/').filter(Boolean)
+                const location = this._tools.base64_decode(params['location']).split('/').filter(Boolean)
                 this.filename = location.slice(-1)[0]
                 this.lang = this.filename.split('.').slice(-1)[0]
                 this.dir = location.slice(0, -1).join('/') || '/'
@@ -106,7 +108,7 @@ export class FileEditorComponent implements OnInit, OnDestroy {
     }
 
     save() {
-        this._http.post('/ndc_api/file/write', {
+        this._http.post('/ndc_api/file/write_text', {
             dir: this.dir,
             filename: this.filename,
             content: this.edited_content
@@ -133,6 +135,6 @@ export class FileEditorComponent implements OnInit, OnDestroy {
     }
 
     navigate(name: string) {
-        this._router.navigate(['/files', btoa(name)]).then()
+        this._router.navigate(['/files', this._tools.base64_encode(name)]).then()
     }
 }

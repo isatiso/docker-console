@@ -9,6 +9,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router'
 import type * as monaco from 'monaco-editor'
 import { filter, Subject, switchMap, tap } from 'rxjs'
 import { MonacoEditorComponent } from '../../monaco/monaco-editor.component'
+import { ToolsService } from '../../services/tools.service'
 import { VersionService } from '../../services/version.service'
 
 @Component({
@@ -48,11 +49,12 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
         private _http: HttpClient,
         private _location: Location,
         private _router: Router,
+        private _tools: ToolsService,
         public versions: VersionService,
         private route: ActivatedRoute,
     ) {
         this.get_file_content$.pipe(
-            switchMap(() => this._http.post<{ data: { content: string } }>('/ndc_api/file/read', { category: 'projects', dir: '/', filename: this.filename })),
+            switchMap(() => this._http.post<{ data: { content: string } }>('/ndc_api/file/read_text', { category: 'projects', dir: '/', filename: this.filename })),
             tap(res => this.content = res.data.content),
             tap(res => this.edited_content = this.content),
             tap(res => console.log(this.content)),
@@ -60,7 +62,7 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
         ).subscribe()
         this.route.params.pipe(
             tap(params => {
-                this.filename = atob(params['location'])
+                this.filename = this._tools.base64_decode(params['location'])
                 this.lang = this.filename.split('.').slice(-1)[0]
             }),
             filter(() => !!this.filename),
@@ -98,7 +100,7 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
     }
 
     save() {
-        this._http.post('/ndc_api/file/write', {
+        this._http.post('/ndc_api/file/write_text', {
             category: 'projects',
             dir: '/',
             filename: this.filename,
@@ -125,6 +127,6 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
     }
 
     navigate(name: string) {
-        this._router.navigate(['/files', btoa(name)]).then()
+        this._router.navigate(['/files', this._tools.base64_encode(name)]).then()
     }
 }
