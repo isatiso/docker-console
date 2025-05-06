@@ -11,13 +11,16 @@ import { FileLocker } from '../helpers/file-lock'
 import { DockerService } from './docker.service'
 
 /**
- * Manage local files, include services and other files
+ * Service for managing file operations and project definitions.
+ * Handles file locking, reading, writing, zipping, and project loading.
  */
 @TpService()
 export class NdcFileService {
 
     readonly data_path = this._config.get('ndc.data_path')
+
     projects: Record<string, DockerDef.DefinitionStat> = {}
+
     private _file_locker = new FileLocker()
     private _load_projects$ = new Subject<[name?: string, resolve?: () => void, reject?: (err: any) => void]>()
     private _pending_task: [name?: string, resolve?: () => void, reject?: (err: any) => void][] = []
@@ -37,18 +40,28 @@ export class NdcFileService {
                 this._pending_task = []
             }),
         ).subscribe()
+
         this._docker.on$.pipe(
             tap(() => this._load_projects$.next([])),
             takeUntil(this._docker.off$),
         ).subscribe()
     }
 
+    /**
+     * Loads project definitions.
+     * @param name Optional project name to load.
+     */
     async load_projects(name?: string) {
         return new Promise<void>((resolve, reject) => {
             this._load_projects$.next([name, resolve, reject])
         })
     }
 
+    /**
+     * Creates a zip archive of a directory.
+     * @param dir Directory to zip.
+     * @returns A stream of the zip archive.
+     */
     async zip(dir: string): Promise<stream.Transform> {
         const filepath = path.join(this.data_path, dir)
         return this._file_locker.with_read_lock([filepath], async () => {
@@ -61,6 +74,12 @@ export class NdcFileService {
         })
     }
 
+    /**
+     * Reads a file's content.
+     * @param dir Directory containing the file.
+     * @param filename Name of the file to read.
+     * @returns File content as a Buffer.
+     */
     async read(dir: string, filename: string) {
         const filepath = path.join(this.data_path, dir, filename)
         return this._file_locker.with_read_lock([filepath], async () => {
@@ -68,6 +87,12 @@ export class NdcFileService {
         })
     }
 
+    /**
+     * Writes content to a file.
+     * @param dir Directory to write the file in.
+     * @param filename Name of the file to write.
+     * @param content Content to write to the file.
+     */
     async write(dir: string, filename: string, content: Buffer) {
         const filepath = path.join(this.data_path, dir, filename)
         return this._file_locker.with_write_lock([filepath], async () => {
@@ -75,6 +100,12 @@ export class NdcFileService {
         })
     }
 
+    /**
+     * Renames a file.
+     * @param dir Directory containing the file.
+     * @param filename Current name of the file.
+     * @param new_name New name for the file.
+     */
     async rename(dir: string, filename: string, new_name: string) {
         const old_filepath = path.join(this.data_path, dir, filename)
         const new_filepath = path.join(this.data_path, dir, new_name)
@@ -83,6 +114,11 @@ export class NdcFileService {
         })
     }
 
+    /**
+     * Removes a file or directory.
+     * @param dir Directory containing the file.
+     * @param filename Name of the file to remove.
+     */
     async rm(dir: string, filename: string) {
         const filepath = path.join(this.data_path, dir, filename)
         return this._file_locker.with_write_lock([filepath], async () => {
@@ -90,6 +126,11 @@ export class NdcFileService {
         })
     }
 
+    /**
+     * Checks if a file or directory exists.
+     * @param target Path to check.
+     * @returns True if the target exists, false otherwise.
+     */
     async exists(target: string) {
         const filepath = path.join(this.data_path, target)
         return await this._file_locker.with_read_lock([filepath], async () => {
@@ -98,6 +139,11 @@ export class NdcFileService {
         }).catch(() => false)
     }
 
+    /**
+     * Lists files in a directory.
+     * @param dir Directory to list files from.
+     * @returns Array of file descriptions.
+     */
     async ls(dir: string): Promise<FileDesc[]> {
         const filepath = path.join(this.data_path, dir)
         return this._file_locker.with_read_lock([filepath], async () => {
@@ -110,6 +156,10 @@ export class NdcFileService {
         })
     }
 
+    /**
+     * Removes a directory.
+     * @param dir Directory to remove.
+     */
     async rmdir(dir: string) {
         const filepath = path.join(this.data_path, dir)
         return this._file_locker.with_write_lock([filepath], async () => {
@@ -117,6 +167,10 @@ export class NdcFileService {
         })
     }
 
+    /**
+     * Creates a directory.
+     * @param dir Directory to create.
+     */
     async mkdir(dir: string) {
         const filepath = path.join(this.data_path, dir)
         return this._file_locker.with_write_lock([filepath], async () => {
@@ -124,6 +178,12 @@ export class NdcFileService {
         })
     }
 
+    /**
+     * Loads project definitions from files.
+     * @param name Optional project name to load.
+     * @param resolve Callback for successful loading.
+     * @param reject Callback for errors.
+     */
     private async _load_projects(name?: string, resolve?: () => void, reject?: (err: any) => void) {
         try {
             if (name) {
@@ -148,6 +208,11 @@ export class NdcFileService {
         }
     }
 
+    /**
+     * Loads a single project definition.
+     * @param name Project name to load.
+     * @param project_data Optional project data object to populate.
+     */
     private async _load_single_project(name: string, project_data?: typeof this.projects) {
         project_data = project_data ?? this.projects
         let stats
@@ -178,6 +243,11 @@ export class NdcFileService {
         }
     }
 
+    /**
+     * Extracts the type of file or directory.
+     * @param d Directory entry to analyze.
+     * @returns The file type.
+     */
     private extract_type(d: fs.Dirent): FileType {
         if (d.isFile()) {
             return 'file'
