@@ -1,6 +1,5 @@
 import { DockerApi, DockerDef, LABEL } from '@docker-console/common'
 import { TpService } from '@tarpit/core'
-import path from 'node:path'
 import { catchError, of, Subject, switchMap, tap } from 'rxjs'
 import { network_def_to_parameters, service_def_to_parameters, volume_def_to_parameters } from '../helpers/docker-helpers'
 import package_json from '../pkg.json'
