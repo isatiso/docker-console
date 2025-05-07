@@ -81,6 +81,10 @@ program.command('start')
             http: {
                 expose_error: true,
                 port: ndc_config_data.port,
+                file_manager: {
+                    root: ndc_config_data.data_path,
+                    download_limit: ndc_config_data.download_size_limit,
+                },
                 cors: {
                     allow_methods: 'GET,POST,PUT,DELETE,HEAD',
                     allow_headers: '*',

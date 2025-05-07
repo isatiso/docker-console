@@ -1,17 +1,16 @@
 import { DockerDef, FileDesc, NdcResponse } from '@docker-console/common'
-import { JsonBody, Params, Post, RawBody, throw_bad_request, TpRouter } from '@tarpit/http'
+import { HttpFileManager, JsonBody, Params, Post, RawBody, throw_bad_request, TpRouter } from '@tarpit/http'
 import { Jtl } from '@tarpit/judge'
 import path from 'node:path'
 import stream from 'node:stream'
 import package_json from '../pkg.json'
-import { NdcFileService } from '../services/file.service'
 import { NdcProjectService } from '../services/project.service'
 
 @TpRouter('/ndc_api/file')
 export class FileRouter {
 
     constructor(
-        private file: NdcFileService,
+        private file: HttpFileManager,
         private project: NdcProjectService,
     ) {
     }
