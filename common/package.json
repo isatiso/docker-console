@@ -6,7 +6,7 @@
     "types": "./lib/cjs/index.d.ts",
     "license": "ISC",
     "scripts": {
-        "build": "npm run build:schema && npm run build:lib",
+        "build": "yarn build:schema && yarn build:lib",
         "build:lib": "rm -rf ./lib && NODE_OPTIONS='--max_old_space_size=4096' tsc --skipLibCheck && tsc -p tsconfig.esm.json --skipLibCheck && cp -r ./schema ./lib",
         "build:schema": "rm -rf ./schema && typescript-json-schema --required ./tsconfig.defs.json DockerDef.UnifiedDefinitions -o ./schema/def.schema.json"
     },
