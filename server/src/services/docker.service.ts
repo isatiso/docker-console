@@ -27,7 +27,7 @@ export class DockerService {
     version_data?: DockerApi.VersionInformation
     hostname = process.env.HOSTNAME ?? ''
     container_id = ''
-    inside_container = process.env.NDC_ENVIRONTMENT === 'container'
+    inside_container = process.env.NDC_ENVIRONMENT === 'container'
     on$ = fromEvent(this._injector, 'start')
     off$ = fromEvent(this._injector, 'terminate')
 
