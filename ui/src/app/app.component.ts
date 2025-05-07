@@ -25,8 +25,9 @@ export class AppComponent implements OnInit {
     }
 
     ngOnInit() {
-        this._http.post<{ data: { project: string, station: string, version: string } }>('/ndc_api/service/version', {}).subscribe(data => {
+        this._http.post<{ data: { version: string, container_id: string } }>('/ndc_api/service/version', {}).subscribe(data => {
             this._config.version = data.data.version
+            this._config.container_id = data.data.container_id
             this.document.title = `Docker Console - ${data.data.version}`
         })
     }

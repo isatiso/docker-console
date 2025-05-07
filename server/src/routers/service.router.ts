@@ -2,6 +2,7 @@ import { NdcResponse } from '@docker-console/common'
 import { JsonBody, Post, throw_forbidden, throw_not_found, TpRouter } from '@tarpit/http'
 import { Jtl } from '@tarpit/judge'
 import package_json from '../pkg.json'
+import { DockerService } from '../services/docker.service'
 import { NdcFileService } from '../services/file.service'
 import { ManagerService } from '../services/manager.service'
 
@@ -10,13 +11,14 @@ export class ServiceRouter {
 
     constructor(
         private file: NdcFileService,
+        private docker: DockerService,
         private manager: ManagerService,
     ) {
     }
 
     @Post()
-    async version(): Promise<NdcResponse<{ version: string }>> {
-        return { status: 'success', data: { version: package_json.version } }
+    async version(): Promise<NdcResponse<{ version: string, container_id: string }>> {
+        return { status: 'success', data: { version: package_json.version, container_id: this.docker.container_id } }
     }
 
     @Post()

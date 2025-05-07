@@ -19,7 +19,6 @@ export class ManagerService {
         private docker: DockerService,
         private pulling_service: DownloadService,
     ) {
-        process.env['NDC_DATA_PATH'] = path.join(this.file.data_path, '/data')
         this.project_up$.pipe(
             switchMap(({ name, resolve, reject }) => of(null).pipe(
                 switchMap(() => this.project_up(name)),

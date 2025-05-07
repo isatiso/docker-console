@@ -12,6 +12,11 @@
             <span class="text-sm">loading modules...({{ loading_data.loaded }}/{{ loading_data.total }})</span>
         }
         <div class="ml-auto"></div>
+        @if (config.container_id) {
+            <mat-chip color="primary">Container: {{ config.container_id.slice(0, 12) }}</mat-chip>
+        } @else {
+            <mat-chip color="primary">Host Running</mat-chip>
+        }
         <mat-chip color="primary">v{{ config.version }}</mat-chip>
         <ng-content></ng-content>
     </div>
