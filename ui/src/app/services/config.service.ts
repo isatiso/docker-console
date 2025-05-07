@@ -6,6 +6,7 @@ import { Injectable } from '@angular/core'
 export class ConfigService {
 
     version = ''
+    container_id = ''
 
     constructor() {
     }

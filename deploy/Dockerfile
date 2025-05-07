@@ -6,4 +6,6 @@ COPY lib/ /root/node
 
 VOLUME /docker-console
 
+ENV NDC_ENVIRONMENT=container
+
 ENTRYPOINT ["node", "index.js", "start"]

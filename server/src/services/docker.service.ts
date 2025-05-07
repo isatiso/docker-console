@@ -25,6 +25,9 @@ const get_data = <T extends AxiosResponse>(res: T): T extends AxiosResponse<infe
 export class DockerService {
 
     version_data?: DockerApi.VersionInformation
+    hostname = process.env.HOSTNAME ?? ''
+    container_id = ''
+    inside_container = process.env.NDC_ENVIRONTMENT === 'container'
     on$ = fromEvent(this._injector, 'start')
     off$ = fromEvent(this._injector, 'terminate')
 
@@ -60,6 +63,9 @@ export class DockerService {
         private _injector: Injector,
         private _config: TpConfigData,
     ) {
+        if (!this.inside_container) {
+            process.env['NDC_DATA_PATH'] = path.join(this._config.get('ndc.data_path'), 'data')
+        }
         this.on$.pipe(
             switchMap(() => timer(0, 500).pipe(
                 switchMap(() => of(null).pipe(
@@ -94,6 +100,14 @@ export class DockerService {
                     this.list_containers({ all: true }).then(async containers => Promise.all(containers.map(async c => {
                         const info = await this.inspect_container(c.Id)
                         if (info.Id) {
+                            if (this.inside_container && !this.container_id && info.Config.Hostname === this.hostname && info.Config.Image === 'plankroot/docker-console') {
+                                this.container_id = info.Id
+                                const data_mount = info.Mounts.find(m => m.Destination === '/docker-console')
+                                if (data_mount && data_mount.Type === 'bind') {
+                                    const data_path = data_mount.Source
+                                    process.env['NDC_DATA_PATH'] = path.join(data_path, 'data')
+                                }
+                            }
                             this.containers[c.Id] = info
                         }
                     }))),
