@@ -1,6 +1,6 @@
 import { Disabled } from '@tarpit/core'
 import { Task, TpSchedule } from '@tarpit/schedule'
-import { NdcFileService } from '../services/file.service'
+
 import { ManagerService } from '../services/manager.service'
 
 @TpSchedule()
@@ -8,7 +8,6 @@ export class UpdaterSchedule {
 
     constructor(
         private manager: ManagerService,
-        private file: NdcFileService,
     ) {
     }
 

@@ -16,7 +16,7 @@ defaults:
 jobs:
   check-version:
     name: Check Repository Version
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -33,7 +33,7 @@ jobs:
           fi
   build-docker-image:
     name: Build Docker Image
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
