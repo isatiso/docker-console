@@ -5,7 +5,7 @@ import { network_def_to_parameters, service_def_to_parameters, volume_def_to_par
 import package_json from '../pkg.json'
 import { DockerService } from './docker.service'
 import { DownloadService } from './download.service'
-import { NdcFileService } from './file.service'
+import { NdcProjectService } from './project.service'
 
 @TpService()
 export class ManagerService {
@@ -14,7 +14,7 @@ export class ManagerService {
     project_down$ = new Subject<{ name: string, resolve: (value?: boolean) => void, reject: (reason?: any) => void }>()
 
     constructor(
-        private file: NdcFileService,
+        private project: NdcProjectService,
         private docker: DockerService,
         private pulling_service: DownloadService,
     ) {
@@ -149,7 +149,7 @@ export class ManagerService {
     }
 
     private preprocess_project_parameters(project_name: string) {
-        const project = this.file.projects[project_name]
+        const project = this.project.projects[project_name]
         if (!project) {
             throw new Error(`Project ${project_name} not found`)
         }

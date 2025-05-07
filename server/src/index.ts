@@ -55,6 +55,7 @@ program.command('start')
         ndc_config_data.app_path = parsed_data.app_path ?? '/app'
         ndc_config_data.config_path = parsed_data.config_path ?? '/etc/docker-console'
         ndc_config_data.data_path = parsed_data.data_path ?? '/docker-console'
+        ndc_config_data.download_size_limit = parsed_data.download_size_limit ?? 1024 * 1024 * 1024
         ndc_config_data.socket_path = parsed_data.socket_path ?? '/var/run/docker.sock'
         ndc_config_data.port = parsed_data.port ?? 7293
         ndc_config_data.docker_repo = parsed_data.docker_repo ?? []

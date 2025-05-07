@@ -5,12 +5,14 @@ import path from 'node:path'
 import stream from 'node:stream'
 import package_json from '../pkg.json'
 import { NdcFileService } from '../services/file.service'
+import { NdcProjectService } from '../services/project.service'
 
 @TpRouter('/ndc_api/file')
 export class FileRouter {
 
     constructor(
         private file: NdcFileService,
+        private project: NdcProjectService,
     ) {
     }
 
@@ -25,9 +27,9 @@ export class FileRouter {
     }>): Promise<NdcResponse<Record<string, DockerDef.DefinitionStat>>> {
         const reload = body.get_if('reload', Jtl.boolean, false)
         if (reload) {
-            await this.file.load_projects()
+            await this.project.load()
         }
-        return { status: 'success', data: this.file.projects }
+        return { status: 'success', data: this.project.projects }
     }
 
     @Post()
@@ -63,7 +65,7 @@ export class FileRouter {
         const cat = body.get_if('category', /data|projects/, 'data')
         const dir = body.get_if('dir', Jtl.non_empty_string, '/')
         const dirname = body.ensure('dirname', Jtl.non_empty_string)
-        await this.file.rmdir(path.join(cat, dir, dirname))
+        await this.file.rm(path.join(cat, dir, dirname))
         return { status: 'success', data: null }
     }
 
@@ -92,7 +94,7 @@ export class FileRouter {
         if (cat !== 'projects' && cat !== 'data') {
             throw_bad_request('category must be data or projects')
         }
-        return this.file.read(path.join(cat, dir), filename)
+        return this.file.read(path.join(cat, dir, filename))
     }
 
     @Post()
@@ -104,7 +106,7 @@ export class FileRouter {
         const cat = body.get_if('category', /data|projects/, 'data')
         const dir = body.get_if('dir', Jtl.non_empty_string, '/')
         const filename = body.ensure('filename', Jtl.non_empty_string)
-        const content = await this.file.read(path.join(cat, dir), filename)
+        const content = await this.file.read(path.join(cat, dir, filename))
         return { status: 'success', data: { content: content.toString('utf8') } }
     }
 
@@ -120,9 +122,9 @@ export class FileRouter {
         if (cat !== 'projects' && cat !== 'data') {
             throw_bad_request('category must be data or projects')
         }
-        await this.file.write(path.join(cat, dir), filename, content)
+        await this.file.write(path.join(cat, dir, filename), content)
         if (cat === 'projects') {
-            await this.file.load_projects(filename.replace(`.project.yml`, ''))
+            await this.project.load(filename.replace(`.project.yml`, ''))
         }
         return { status: 'success', data: null }
     }
@@ -138,9 +140,9 @@ export class FileRouter {
         const dir = body.get_if('dir', Jtl.non_empty_string, '/')
         const filename = body.ensure('filename', Jtl.non_empty_string)
         const content = body.ensure('content', Jtl.string)
-        await this.file.write(path.join(cat, dir), filename, Buffer.from(content, 'utf8'))
+        await this.file.write(path.join(cat, dir, filename), Buffer.from(content, 'utf8'))
         if (cat === 'projects') {
-            await this.file.load_projects(filename.replace(`.project.yml`, ''))
+            await this.project.load(filename.replace(`.project.yml`, ''))
         }
         return { status: 'success', data: null }
     }
@@ -156,10 +158,10 @@ export class FileRouter {
         const dir = body.get_if('dir', Jtl.non_empty_string, '/')
         const filename = body.ensure('filename', Jtl.non_empty_string)
         const new_name = body.ensure('new_name', Jtl.non_empty_string)
-        await this.file.rename(path.join(cat, dir), filename, new_name)
+        await this.file.rename(path.join(cat, dir, filename), path.join(cat, dir, new_name))
         if (cat === 'projects') {
-            await this.file.load_projects(filename.replace(`.project.yml`, ''))
-            await this.file.load_projects(new_name.replace(`.project.yml`, ''))
+            await this.project.load(filename.replace(`.project.yml`, ''))
+            await this.project.load(new_name.replace(`.project.yml`, ''))
         }
         return { status: 'success', data: null }
     }
@@ -173,9 +175,9 @@ export class FileRouter {
         const cat = body.get_if('category', /data|projects/, 'data') as 'projects' | 'data'
         const dir = body.get_if('dir', Jtl.non_empty_string, '/')
         const filename = body.ensure('filename', Jtl.non_empty_string)
-        await this.file.rm(path.join(cat, dir), filename)
+        await this.file.rm(path.join(cat, dir, filename))
         if (cat === 'projects') {
-            await this.file.load_projects(filename.replace(`.project.yml`, ''))
+            await this.project.load(filename.replace(`.project.yml`, ''))
         }
         return { status: 'success', data: null }
     }

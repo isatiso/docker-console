@@ -30,6 +30,11 @@ export interface NdcConfiguration {
      */
     data_path: string
     /**
+     * Path to the shared data directory
+     * default: '/usr/local/share/docker-console'
+     */
+    download_size_limit: number
+    /**
      * Path to the log directory
      * default: '/var/log'
      */

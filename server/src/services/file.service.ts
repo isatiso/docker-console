@@ -1,14 +1,36 @@
-import { DockerDef, FileDesc, FileType, projects_validator } from '@docker-console/common'
+import { FileDesc, FileType } from '@docker-console/common'
 import { TpConfigData, TpService } from '@tarpit/core'
-import archiver from 'archiver'
 import fs from 'node:fs'
 import fsp from 'node:fs/promises'
 import path from 'node:path'
-import { concatMap, finalize, of, Subject, switchMap, takeUntil, tap } from 'rxjs'
 import stream from 'stream'
-import yaml from 'yaml'
+import * as tar from 'tar'
 import { FileLocker } from '../helpers/file-lock'
-import { DockerService } from './docker.service'
+
+async function too_big(dir: string, limit: number): Promise<boolean> {
+    let total = 0
+    const stack: string[] = [dir]
+
+    while (stack.length > 0) {
+        const current = stack.pop()!
+        const stat = await fsp.lstat(current)
+        if (stat.isSymbolicLink()) {
+            total += stat.size
+        } else if (stat.isFile()) {
+            total += stat.size
+        } else if (stat.isDirectory()) {
+            const entries = await fsp.readdir(current)
+            for (const entry of entries) {
+                stack.push(path.join(current, entry))
+            }
+        }
+        if (total > limit) {
+            return false
+        }
+    }
+
+    return true
+}
 
 /**
  * Service for managing file operations and project definitions.
@@ -18,135 +40,84 @@ import { DockerService } from './docker.service'
 export class NdcFileService {
 
     readonly data_path = this._config.get('ndc.data_path')
-
-    projects: Record<string, DockerDef.DefinitionStat> = {}
+    readonly download_size_limit = this._config.get('ndc.download_size_limit')
 
     private _file_locker = new FileLocker()
-    private _load_projects$ = new Subject<[name?: string, resolve?: () => void, reject?: (err: any) => void]>()
-    private _pending_task: [name?: string, resolve?: () => void, reject?: (err: any) => void][] = []
 
     constructor(
         private _config: TpConfigData,
-        private _docker: DockerService,
     ) {
-        this._load_projects$.pipe(
-            tap(task => this._pending_task.push(task)),
-            concatMap(([name, resolve, reject]) => of(null).pipe(
-                switchMap(() => this._load_projects(name, resolve, reject)),
-                tap(() => this._pending_task.shift()),
-            )),
-            finalize(() => {
-                this._pending_task.forEach(task => task[1]?.())
-                this._pending_task = []
-            }),
-        ).subscribe()
-
-        this._docker.on$.pipe(
-            tap(() => this._load_projects$.next([])),
-            takeUntil(this._docker.off$),
-        ).subscribe()
-    }
-
-    /**
-     * Loads project definitions.
-     * @param name Optional project name to load.
-     */
-    async load_projects(name?: string) {
-        return new Promise<void>((resolve, reject) => {
-            this._load_projects$.next([name, resolve, reject])
-        })
     }
 
     /**
      * Creates a zip archive of a directory.
-     * @param dir Directory to zip.
+     * @param p Directory to zip.
      * @returns A stream of the zip archive.
      */
-    async zip(dir: string): Promise<stream.Transform> {
-        const filepath = path.join(this.data_path, dir)
-        return this._file_locker.with_read_lock([filepath], async () => {
-            const archive = archiver('zip', { zlib: { level: 9 } })
+    async zip(p: string): Promise<stream.Transform> {
+        const filepath = path.join(this.data_path, p)
+        if (await too_big(filepath, this.download_size_limit)) {
+            throw new Error('Archive size exceeds limit')
+        }
+        return this._file_locker.with_read_lock([p], async () => {
             const pass_through = new stream.PassThrough()
-            archive.pipe(pass_through)
-            archive.directory(filepath, false)
-            await archive.finalize()
+            tar.c({ z: true, cwd: filepath }, ['.']).pipe(pass_through)
             return pass_through
         })
     }
 
     /**
      * Reads a file's content.
-     * @param dir Directory containing the file.
-     * @param filename Name of the file to read.
+     * @param p path to the file.
      * @returns File content as a Buffer.
      */
-    async read(dir: string, filename: string) {
-        const filepath = path.join(this.data_path, dir, filename)
-        return this._file_locker.with_read_lock([filepath], async () => {
-            return await fsp.readFile(filepath)
-        })
+    async read(p: string) {
+        const filepath = path.join(this.data_path, p)
+        return this._file_locker.with_read_lock([p], () => fsp.readFile(filepath))
     }
 
     /**
      * Writes content to a file.
-     * @param dir Directory to write the file in.
-     * @param filename Name of the file to write.
+     * @param p path to the file.
      * @param content Content to write to the file.
      */
-    async write(dir: string, filename: string, content: Buffer) {
-        const filepath = path.join(this.data_path, dir, filename)
-        return this._file_locker.with_write_lock([filepath], async () => {
-            await fsp.writeFile(filepath, content)
-        })
+    async write(p: string, content: Buffer) {
+        const filepath = path.join(this.data_path, p)
+        return this._file_locker.with_write_lock([p], () => fsp.writeFile(filepath, content))
     }
 
     /**
      * Renames a file.
-     * @param dir Directory containing the file.
-     * @param filename Current name of the file.
-     * @param new_name New name for the file.
+     * @param pre Previous path to the file.
+     * @param cur New path to the file.
      */
-    async rename(dir: string, filename: string, new_name: string) {
-        const old_filepath = path.join(this.data_path, dir, filename)
-        const new_filepath = path.join(this.data_path, dir, new_name)
-        return this._file_locker.with_write_lock([old_filepath, new_filepath], async () => {
-            await fsp.rename(old_filepath, new_filepath)
-        })
-    }
-
-    /**
-     * Removes a file or directory.
-     * @param dir Directory containing the file.
-     * @param filename Name of the file to remove.
-     */
-    async rm(dir: string, filename: string) {
-        const filepath = path.join(this.data_path, dir, filename)
-        return this._file_locker.with_write_lock([filepath], async () => {
-            await fsp.rm(filepath, { recursive: true, force: true })
-        })
+    async rename(pre: string, cur: string) {
+        const old_filepath = path.join(this.data_path, pre)
+        const new_filepath = path.join(this.data_path, cur)
+        return this._file_locker.with_write_lock([pre, cur], () => fsp.rename(old_filepath, new_filepath))
     }
 
     /**
      * Checks if a file or directory exists.
-     * @param target Path to check.
+     * @param p path to the file or directory.
      * @returns True if the target exists, false otherwise.
      */
-    async exists(target: string) {
-        const filepath = path.join(this.data_path, target)
-        return await this._file_locker.with_read_lock([filepath], async () => {
-            await fsp.stat(filepath)
+    async exists(p: string) {
+        const filepath = path.join(this.data_path, p)
+        return await this._file_locker.with_read_lock([p], async () => {
+            await fsp.lstat(filepath)
             return true
         }).catch(() => false)
     }
 
     /**
      * Lists files in a directory.
-     * @param dir Directory to list files from.
+     * @param p path to the directory.
      * @returns Array of file descriptions.
      */
-    async ls(dir: string): Promise<FileDesc[]> {
-        const filepath = path.join(this.data_path, dir)
-        return this._file_locker.with_read_lock([filepath], async () => {
+    async ls(p: string): Promise<FileDesc[]> {
+        const filepath = path.join(this.data_path, p)
+        return this._file_locker.with_read_lock([p], async () => {
             const files = await fsp.readdir(filepath, { withFileTypes: true })
             return Promise.all(files.map(async f => ({
                 name: f.name,
@@ -157,90 +128,21 @@ export class NdcFileService {
     }
 
     /**
-     * Removes a directory.
-     * @param dir Directory to remove.
+     * Removes a file or directory.
+     * @param p path to the file or directory.
      */
-    async rmdir(dir: string) {
-        const filepath = path.join(this.data_path, dir)
-        return this._file_locker.with_write_lock([filepath], async () => {
-            await fsp.rm(filepath, { recursive: true, force: true })
-        })
+    async rm(p: string) {
+        const filepath = path.join(this.data_path, p)
+        return this._file_locker.with_write_lock([p], () => fsp.rm(filepath, { recursive: true, force: true }))
     }
 
     /**
      * Creates a directory.
-     * @param dir Directory to create.
+     * @param p Directory to create.
      */
-    async mkdir(dir: string) {
-        const filepath = path.join(this.data_path, dir)
-        return this._file_locker.with_write_lock([filepath], async () => {
-            await fsp.mkdir(filepath, { recursive: true })
-        })
-    }
-
-    /**
-     * Loads project definitions from files.
-     * @param name Optional project name to load.
-     * @param resolve Callback for successful loading.
-     * @param reject Callback for errors.
-     */
-    private async _load_projects(name?: string, resolve?: () => void, reject?: (err: any) => void) {
-        try {
-            if (name) {
-                await this._load_single_project(name)
-            } else {
-                const project_data: typeof this.projects = {}
-                const files = await fsp.readdir(path.join(this.data_path, 'projects'), { withFileTypes: true })
-                for (const s of files) {
-                    if (s.isFile() && s.name.endsWith(`.project.yml`)) {
-                        const name = s.name.replace(`.project.yml`, '')
-                        await this._load_single_project(name, project_data)
-                    } else if (s.isDirectory()) {
-                        // TODO: deal with directory
-                    }
-                }
-                this.projects = project_data
-            }
-            resolve?.()
-        } catch (e: any) {
-            reject?.(e)
-            logger.debug(`Fail to load project ${name}: %O`, e)
-        }
-    }
-
-    /**
-     * Loads a single project definition.
-     * @param name Project name to load.
-     * @param project_data Optional project data object to populate.
-     */
-    private async _load_single_project(name: string, project_data?: typeof this.projects) {
-        project_data = project_data ?? this.projects
-        let stats
-        try {
-            stats = await fsp.stat(path.join(this.data_path, 'projects', `${name}.project.yml`))
-            if (!stats.isFile()) {
-                delete project_data[name]
-                return
-            }
-        } catch (e: any) {
-            if (e.code === 'ENOENT') {
-                delete project_data[name]
-                return
-            } else {
-                throw e
-            }
-        }
-        const content = await fsp.readFile(path.join(this.data_path, 'projects', `${name}.project.yml`), { encoding: 'utf-8' })
-        try {
-            const def = yaml.parse(content, {})
-            const valid = projects_validator(def)
-            project_data[name] = { name, content, valid, def, mtimeMs: stats.mtimeMs, filename: `${name}.project.yml`, size: stats.size }
-            if (!valid) {
-                project_data[name].reason = projects_validator.errors?.map(e => e.message!)
-            }
-        } catch (e) {
-            // TODO: warning log
-        }
+    async mkdir(p: string) {
+        const filepath = path.join(this.data_path, p)
+        return this._file_locker.with_write_lock([p], () => fsp.mkdir(filepath, { recursive: true }))
     }
 
     /**
