@@ -89,7 +89,9 @@ export class ManagerService {
             params.Labels[LABEL.Version] = package_json.version
             params.Labels[LABEL.image] = image_info.Id ? image_info.Id : ''
             params.HostConfig.Binds = params.HostConfig.Binds ?? []
-            params.HostConfig.Binds.push(`${this.file.data_path}/data:/usr/share/docker-console/data:rw`)
+            if (process.env.NDC_DATA_PATH) {
+                params.HostConfig.Binds.push(`${process.env.NDC_DATA_PATH}:/docker-console:rw`)
+            }
             for (let i = 1; i <= replicas; i++) {
                 const container_name = `${service_name}-${i}`
                 const custom_params = { ...params }
