@@ -184,6 +184,10 @@ export class FilesComponent {
         this.selection.select(...this.files)
     }
 
+    $cast(value: any) {
+        return value as FileDesc
+    }
+
     navigate(name: string) {
         this._router.navigate(['/files', this._tools.base64_encode(name)]).then()
     }
