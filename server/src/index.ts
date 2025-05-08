@@ -35,55 +35,44 @@ program.name('Node Docker Console')
 
 program.command('start')
     .description('Start Docker Console')
-    .option('-c,--config-file <filepath>', 'The path of the configuration file.')
+    .option('-d,--directory <filepath>', 'The data directory of Docker Console')
     .action(async (options: {
-        configFile?: string
+        directory?: string
     }, _command: Command) => {
-        const ndc_config_path = options.configFile ?? '/etc/docker-console/config.json'
-
-        let parsed_data: OptionalNdcConfiguration
-        if (fs.existsSync(ndc_config_path)) {
-            const ndc_config_str = fs.readFileSync(ndc_config_path, 'utf-8')
-            parsed_data = JSON.parse(ndc_config_str) as OptionalNdcConfiguration
-        } else {
-            parsed_data = {}
+        const data_directory = options.directory ?? '/docker-console'
+        if (!fs.existsSync(data_directory)) {
+            fs.mkdirSync(data_directory, { recursive: true })
         }
+        const ndc_config_path = `${data_directory}/config.json`
+        if (!fs.existsSync(ndc_config_path)) {
+            fs.writeFileSync(ndc_config_path, JSON.stringify({
+                socket_path: '/var/run/docker.sock',
+                port: 7293,
+                download_size_limit: 0,
+                log_level: 'info',
+            }, null, 4), { encoding: 'utf-8' })
+        }
+
+        const ndc_config_str = fs.readFileSync(ndc_config_path, 'utf-8')
+        const parsed_data = JSON.parse(ndc_config_str) as OptionalNdcConfiguration
 
         const ndc_config_data = parsed_data as NdcConfiguration
 
-        ndc_config_data.log_path = parsed_data.log_path ?? '/var/log'
-        ndc_config_data.app_path = parsed_data.app_path ?? '/app'
-        ndc_config_data.config_path = parsed_data.config_path ?? '/etc/docker-console'
-        ndc_config_data.data_path = parsed_data.data_path ?? '/docker-console'
-        ndc_config_data.download_size_limit = parsed_data.download_size_limit ?? 1024 * 1024 * 1024
+        ndc_config_data.data_path = data_directory
+        ndc_config_data.download_limit = parsed_data.download_limit ?? 0
         ndc_config_data.socket_path = parsed_data.socket_path ?? '/var/run/docker.sock'
         ndc_config_data.port = parsed_data.port ?? 7293
         ndc_config_data.docker_repo = parsed_data.docker_repo ?? []
         ndc_config_data.log_level = ndc_config_data.log_level ?? 'info'
 
-        // TODO: validate ndc_config_data
-
-        // maybe get config from file or config center
-        // ndc: {
-        //     docker_repo: [
-        //         {
-        //             host: '854156987822.dkr.ecr.us-east-1.amazonaws.com',
-        //             alias: ['dkr.prod.cov.xyz'],
-        //             region: 'us-east-1',
-        //             type: 'aws',
-        //             access_key_id: process.env.AWS_ACCESS_KEY_ID ?? '',
-        //             secret_access_key: process.env.AWS_SECRET_ACCESS_KEY ?? '',
-        //         }
-        //     ]
-        // },
         const raw_config_data: TpConfigSchema = {
             ndc: ndc_config_data,
             http: {
                 expose_error: true,
                 port: ndc_config_data.port,
                 file_manager: {
-                    root: ndc_config_data.data_path,
-                    download_limit: ndc_config_data.download_size_limit,
+                    root: data_directory,
+                    download_limit: ndc_config_data.download_limit,
                 },
                 cors: {
                     allow_methods: 'GET,POST,PUT,DELETE,HEAD',

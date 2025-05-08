@@ -105,7 +105,7 @@ export class ContainerExecComponent implements OnDestroy, AfterViewInit {
         const close$ = new Subject()
         close$.pipe(
             take(1),
-            tap(() => this._term!.write('click ⬅️ to go back')),
+            tap(() => this.go_back()),
         ).subscribe()
         this._ws = webSocket<any>({
             url: `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ndc_api/docker/start_exec?id=${id}`,

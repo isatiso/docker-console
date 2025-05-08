@@ -15,30 +15,15 @@ export interface NdcConfiguration {
      */
     port: number
     /**
-     * Path to the application directory
-     * default: '/app'
-     */
-    app_path: string
-    /**
-     * Path to the configuration directory
-     * default: '/etc/docker-console'
-     */
-    config_path: string
-    /**
      * Path to the shared data directory
-     * default: '/usr/local/share/docker-console'
+     * default: '/docker-console'
      */
     data_path: string
     /**
-     * Path to the shared data directory
-     * default: '/usr/local/share/docker-console'
+     * Limit of the origin data size before download
+     * default: 0
      */
-    download_size_limit: number
-    /**
-     * Path to the log directory
-     * default: '/var/log'
-     */
-    log_path: string
+    download_limit: number
     /**
      * Log level
      */

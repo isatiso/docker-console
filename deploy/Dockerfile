@@ -1,11 +1,12 @@
 FROM node:22.2.0
 
-WORKDIR /root/node
 
 COPY lib/ /root/node
+COPY entrypoint.sh /root/
 
 VOLUME /docker-console
+WORKDIR /docker-console
 
 ENV NDC_ENVIRONMENT=container
 
-ENTRYPOINT ["node", "index.js", "start"]
+ENTRYPOINT ["/root/entrypoint.sh"]

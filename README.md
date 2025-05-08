@@ -38,7 +38,7 @@ You can run Docker Console directly using the pre-built image available on Docke
 2. Run the Docker Console container in the background with persistent settings:
 
    ```bash
-   docker run -d --restart always -p 7293:7293 -v /var/run/docker.sock:/var/run/docker.sock -v /etc/docker-console:/etc/docker-console --name docker-console plankroot/docker-console
+   docker run -d --restart always -p 7293:7293 -v /var/run/docker.sock:/var/run/docker.sock -v /docker-console:/docker-console --name docker-console plankroot/docker-console
    ```
 
 This command will:

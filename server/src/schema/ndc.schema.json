@@ -28,18 +28,73 @@
             },
             "type": "object"
         },
+        "HttpFileManagerConfig": {
+            "properties": {
+                "download_limit": {
+                    "type": "number"
+                },
+                "root": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "HttpStaticConfig": {
+            "properties": {
+                "cache_control": {
+                    "$ref": "#/definitions/ResponseCacheControl"
+                },
+                "cache_size": {
+                    "type": "number"
+                },
+                "dotfile": {
+                    "enum": [
+                        "allow",
+                        "deny",
+                        "ignore"
+                    ],
+                    "type": "string"
+                },
+                "extensions": {
+                    "items": {
+                        "pattern": "^..*$",
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "index": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "root": {
+                    "type": "string"
+                },
+                "scope": {
+                    "type": "string"
+                },
+                "vary": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "const": "*",
+                            "type": "string"
+                        }
+                    ]
+                }
+            },
+            "type": "object"
+        },
         "NdcConfiguration": {
             "properties": {
-                "app_path": {
-                    "description": "Path to the application directory\ndefault: '/app'",
-                    "type": "string"
-                },
-                "config_path": {
-                    "description": "Path to the configuration directory\ndefault: '/etc/docker-console'",
-                    "type": "string"
-                },
                 "data_path": {
-                    "description": "Path to the shared data directory\ndefault: '/usr/local/share/docker-console'",
+                    "description": "Path to the shared data directory\ndefault: '/docker-console'",
                     "type": "string"
                 },
                 "docker_repo": {
@@ -49,6 +104,10 @@
                     },
                     "type": "array"
                 },
+                "download_limit": {
+                    "description": "Limit of the origin data size before download\ndefault: 0",
+                    "type": "number"
+                },
                 "log_level": {
                     "description": "Log level",
                     "enum": [
@@ -57,10 +116,6 @@
                         "info",
                         "warn"
                     ],
-                    "type": "string"
-                },
-                "log_path": {
-                    "description": "Path to the log directory\ndefault: '/var/log'",
                     "type": "string"
                 },
                 "port": {
@@ -139,6 +194,9 @@
                 "expose_error": {
                     "type": "boolean"
                 },
+                "file_manager": {
+                    "$ref": "#/definitions/HttpFileManagerConfig"
+                },
                 "port": {
                     "type": "number"
                 },
@@ -168,53 +226,17 @@
                     "type": "object"
                 },
                 "static": {
-                    "properties": {
-                        "cache_control": {
-                            "$ref": "#/definitions/ResponseCacheControl"
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/HttpStaticConfig"
                         },
-                        "cache_size": {
-                            "type": "number"
-                        },
-                        "dotfile": {
-                            "enum": [
-                                "allow",
-                                "deny",
-                                "ignore"
-                            ],
-                            "type": "string"
-                        },
-                        "extensions": {
+                        {
                             "items": {
-                                "pattern": "^..*$",
-                                "type": "string"
+                                "$ref": "#/definitions/HttpStaticConfig"
                             },
                             "type": "array"
-                        },
-                        "index": {
-                            "items": {
-                                "type": "string"
-                            },
-                            "type": "array"
-                        },
-                        "root": {
-                            "type": "string"
-                        },
-                        "vary": {
-                            "anyOf": [
-                                {
-                                    "items": {
-                                        "type": "string"
-                                    },
-                                    "type": "array"
-                                },
-                                {
-                                    "const": "*",
-                                    "type": "string"
-                                }
-                            ]
                         }
-                    },
-                    "type": "object"
+                    ]
                 }
             },
             "type": "object"
