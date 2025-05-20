@@ -35,7 +35,7 @@ export const appConfig: ApplicationConfig = {
         provideRouter(
             routes,
             withEnabledBlockingInitialNavigation(),
-            withDebugTracing(),
+            // withDebugTracing(),
             withPreloading(NdcPreloadAllModules),
         ),
         // provideClientHydration(
