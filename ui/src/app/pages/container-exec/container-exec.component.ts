@@ -88,7 +88,6 @@ export class ContainerExecComponent implements OnDestroy, AfterViewInit {
         ).subscribe()
         this.route.params.pipe(
             map(params => this.container_id = params['id']),
-            tap(id => console.log('params', id)),
             tap(id => this.inspect_container$.next(id)),
             tap(() => this.start$.next()),
             takeUntilDestroyed(),
