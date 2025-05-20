@@ -10,5 +10,11 @@
     },
     "dependencies": {
         "@lydell/node-pty": "^1.1.0"
+    },
+    "devDependencies": {
+        "rollup": "^4.26.0",
+        "@rollup/plugin-commonjs": "^25.0.7",
+        "@rollup/plugin-json": "^6.1.0",
+        "@rollup/plugin-node-resolve": "^15.2.3"
     }
 }

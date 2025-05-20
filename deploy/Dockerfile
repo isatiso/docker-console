@@ -8,7 +8,7 @@ COPY .bashrc /root/.bashrc
 
 WORKDIR /root/node
 
-RUN yarn install --frozen-lockfile
+RUN yarn install --production --frozen-lockfile
 
 VOLUME /docker-console
 WORKDIR /docker-console

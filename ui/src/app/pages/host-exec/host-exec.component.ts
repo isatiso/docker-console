@@ -89,7 +89,7 @@ export class HostExecComponent implements OnDestroy, AfterViewInit {
         close$.pipe(
             take(1),
             takeUntil(this._destroyed$),
-            // tap(() => this.go_back()),
+            tap(() => this.go_back()),
         ).subscribe()
         const params = `id=${this.exec_id}&rows=${this._term!.rows}&cols=${this._term!.cols}&type=${this.program}`
         this._ws = webSocket<any>({
