@@ -45,7 +45,9 @@
                             }
                         ],
                         "styles": [
+                            "src/assets/fonts/powerline.css",
                             "src/assets/fonts/open-sans.css",
+                            "src/assets/fonts/source-code-pro.css",
                             "src/assets/fonts/md-icon.css",
                             "src/styles.scss"
                         ],

@@ -1,0 +1,103 @@
+@font-face {
+    font-family: "Anonymous Pro";
+    src: local("Anonymice Powerline"),
+         url(powerline/AnonymousPro.woff2) format("woff2");
+}
+
+@font-face {
+    font-family: "DejaVu Sans Mono";
+    src: local("DejaVu Sans Mono for Powerline"),
+         url(powerline/DejaVuSansMono.woff2) format("woff2");
+    font-weight: normal;
+    font-style: normal;
+}
+@font-face {
+    font-family: "DejaVu Sans Mono";
+    src: local("DejaVu Sans Mono for Powerline"),
+         url(powerline/DejaVuSansMono-Bold.woff2) format("woff2");
+    font-weight: bold;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "Hack";
+    src: local("Hack"),
+         url(powerline/Hack.woff2) format("woff2");
+}
+
+@font-face {
+    font-family: "Inconsolata";
+    src: local("Inconsolata for Powerline"),
+         url(powerline/Inconsolata.woff2) format("woff2");
+}
+
+@font-face {
+    font-family: "Inconsolata-g";
+    src: local("Inconsolata-g for Powerline"),
+         url(powerline/Inconsolata-g.woff2) format('woff2');
+}
+
+@font-face {
+    font-family: "Iosevka";
+    src: local("Iosevka"),
+         url(powerline/iosevka-term-medium.woff2) format('woff2');
+}
+
+@font-face {
+    font-family: "Liberation Mono";
+    src: local("Literation Mono Powerline"),
+         url(powerline/LiberationMono.woff2) format("woff2");
+}
+
+@font-face {
+    font-family: "PT Mono";
+    src: local("PT Mono for Powerline"),
+         url(powerline/PTMono.woff2) format("woff2");
+}
+
+@font-face {
+    font-family: "Source Code Pro";
+    src: local("Source Code Pro for Powerline"),
+         local("Sauce Code Powerline"),
+         url(powerline/SourceCodePro.woff2) format("woff2");
+    font-weight: normal;
+    font-style: normal;
+}
+@font-face {
+    font-family: "Source Code Pro";
+    src: local("Source Code Pro for Powerline"),
+         local("Sauce Code Powerline"),
+         url(powerline/SourceCodePro-Bold.woff2) format("woff2");
+    font-weight: bold;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "Ubuntu Mono";
+    src: local("Ubuntu Mono derivative Powerline"),
+         url(powerline/UbuntuMono.woff2) format("woff2");
+}
+
+@font-face {
+    font-family: 'monofur for Powerline';
+    src: local('MonofurForPowerline.woff2'),
+         url(powerline/monofur/Monofur.woff2) format('woff2');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'monofur for Powerline';
+    src: local('MonofurForPowerline.woff2'),
+         url(powerline/monofur/Monofur-Bold.woff2) format('woff2');
+    font-weight: bold;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'monofur for Powerline';
+    src: local('MonofurForPowerline.woff2'),
+         url(powerline/monofur/Monofur-Italic.woff2) format('woff2');
+    font-weight: normal;
+    font-style: italic;
+}
