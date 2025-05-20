@@ -29,8 +29,7 @@ export class NdcHttpHooks extends HttpHooks {
         const err_msg = context.response.status >= 400 ? `<${context.result.code} ${context.result.msg}>` : ''
         await this.write_request_log(context.request.ip, `${duration}ms`, context.request.method ?? '-', context.response.status + '', context.request.path ?? '-', err_msg)
         if (context.response.status === 500) {
-            logger.error(`%O`, context.result.origin)
-            logger.debug(`%O`, context.result.stack)
+            logger.error(`%O`, context.result.stack)
         }
     }
 

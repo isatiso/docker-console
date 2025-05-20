@@ -9,7 +9,7 @@ import { ActivatedRoute } from '@angular/router'
 import { DockerApi, NdcResponse } from '@docker-console/common'
 import { FitAddon } from '@xterm/addon-fit'
 import { ITerminalOptions, Terminal } from '@xterm/xterm'
-import { BehaviorSubject, debounceTime, filter, map, of, Subject, switchMap, take, tap } from 'rxjs'
+import { BehaviorSubject, debounceTime, filter, map, of, Subject, switchMap, take, takeUntil, tap } from 'rxjs'
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket'
 import dark_theme from '../../iterm/material_dark_theme'
 import light_theme from '../../iterm/material_light_theme'
@@ -42,6 +42,7 @@ export class ContainerExecComponent implements OnDestroy, AfterViewInit {
 
     private _resize_observer?: ResizeObserver
     private _ws?: WebSocketSubject<any>
+    private _destroyed$ = new Subject<void>()
 
     constructor(
         private _location: Location,
@@ -105,6 +106,7 @@ export class ContainerExecComponent implements OnDestroy, AfterViewInit {
         const close$ = new Subject()
         close$.pipe(
             take(1),
+            takeUntil(this._destroyed$),
             tap(() => this.go_back()),
         ).subscribe()
         this._ws = webSocket<any>({
@@ -148,15 +150,12 @@ export class ContainerExecComponent implements OnDestroy, AfterViewInit {
     }
 
     ngOnDestroy() {
+        this._destroyed$.next()
         this._resize_observer?.unobserve(this.terminal_div!.nativeElement)
         this._term?.dispose()
     }
 
     go_back() {
         this._location.back()
-    }
-
-    close_term() {
-        this._ws?.next(String.fromCharCode(10, 11))
     }
 }

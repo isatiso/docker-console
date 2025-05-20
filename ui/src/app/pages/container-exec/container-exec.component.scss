@@ -1,1 +1,20 @@
 @import "@xterm/xterm/css/xterm.css";
+
+.xterm .xterm-viewport::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.xterm .xterm-viewport::-webkit-scrollbar-thumb {
+    background-color: rgba(128, 128, 128, 0.4); /* 淡淡的白色滑块 */
+    border-radius: 4px;
+}
+
+.xterm .xterm-viewport::-webkit-scrollbar-track {
+    background: transparent; /* 不显示轨道 */
+}
+
+.xterm .xterm-viewport {
+    scrollbar-color: rgba(128, 128, 128, 0.4) transparent; /* Firefox 兼容 */
+    scrollbar-width: thin;
+}
