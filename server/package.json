@@ -28,7 +28,6 @@
         "axios": "~1.8.2",
         "commander": "^12.1.0",
         "compare-versions": "^6.1.0",
-        "node-pty": "^1.0.0",
         "pino": "^8.16.2",
         "pino-pretty": "^10.2.3",
         "readable-stream": "^3.5.0",
