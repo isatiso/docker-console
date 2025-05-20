@@ -155,4 +155,8 @@ export class ContainerExecComponent implements OnDestroy, AfterViewInit {
     go_back() {
         this._location.back()
     }
+
+    close_term() {
+        this._ws?.next(String.fromCharCode(10, 11))
+    }
 }
