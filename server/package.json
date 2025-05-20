@@ -13,6 +13,7 @@
         "@aws-sdk/client-ecr": "^3.583.0",
         "@aws-sdk/client-s3": "^3.583.0",
         "@docker-console/common": "*",
+        "@lydell/node-pty": "^1.1.0",
         "@tarpit/barbeque": "^0.5.71",
         "@tarpit/config": "^0.5.71",
         "@tarpit/content-type": "^0.5.71",

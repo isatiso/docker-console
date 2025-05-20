@@ -15,6 +15,6 @@ export default [{
         }),
     ],
     external: [
-        'node-pty'
+        '@lydell/node-pty'
     ]
 }]

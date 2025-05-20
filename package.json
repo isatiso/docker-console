@@ -4,8 +4,7 @@
     "workspaces": [
         "common",
         "server",
-        "ui",
-        "deploy"
+        "ui"
     ],
     "scripts": {
         "build": "yarn workspaces run build",

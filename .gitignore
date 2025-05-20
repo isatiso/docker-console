@@ -3,4 +3,6 @@
 
 **/lib/
 
+deploy/.bashrc
+
 test.*
