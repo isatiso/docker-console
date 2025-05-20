@@ -32,10 +32,16 @@ export class PtyRouter {
         const rows = +params.ensure('rows', /^[0-9]+$/)
         const cols = +params.ensure('cols', /^[0-9]+$/)
         let pty_ins: pty.IPty
-        if (type === 'shell') {
-            pty_ins = pty.spawn(process.env.SHELL ?? 'sh', [], { name: 'xterm-color', cols, rows, cwd: process.cwd(), env: process.env })
-        } else {
-            pty_ins = pty.spawn('tail', ['-f', '-n', '200', this._log_file], { name: 'xterm-color', cols, rows, cwd: process.cwd(), env: process.env })
+        try {
+
+            if (type === 'shell') {
+                pty_ins = pty.spawn(process.env.SHELL ?? 'sh', [], { name: 'xterm-color', cols, rows, cwd: process.cwd(), env: process.env })
+            } else {
+                pty_ins = pty.spawn('tail', ['-f', '-n', '200', this._log_file], { name: 'xterm-color', cols, rows, cwd: process.cwd(), env: process.env })
+            }
+        } catch (e) {
+            console.log(e)
+            return
         }
         this._pty_map[id] = pty_ins
         pty_ins.onExit(() => {

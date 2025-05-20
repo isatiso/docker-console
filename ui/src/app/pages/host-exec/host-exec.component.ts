@@ -9,7 +9,7 @@ import { ActivatedRoute } from '@angular/router'
 import { filterOutError } from '@docker-console/common'
 import { FitAddon } from '@xterm/addon-fit'
 import { ITerminalOptions, Terminal } from '@xterm/xterm'
-import { BehaviorSubject, debounceTime, filter, finalize, merge, of, Subject, switchMap, take, takeUntil, tap } from 'rxjs'
+import { BehaviorSubject, debounceTime, filter, finalize, find, merge, of, Subject, switchMap, take, takeUntil, tap } from 'rxjs'
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket'
 import dark_theme from '../../iterm/material_dark_theme'
 import light_theme from '../../iterm/material_light_theme'
@@ -35,6 +35,7 @@ export class HostExecComponent implements OnDestroy, AfterViewInit {
 
     private prefer_dark$ = new BehaviorSubject(false)
     private start$ = new Subject<void>()
+    private view_init$ = new BehaviorSubject(false)
     private resize$ = new Subject<{ cols: number, rows: number }>()
     private _term?: Terminal
     private _fitAddon?: FitAddon
@@ -63,6 +64,7 @@ export class HostExecComponent implements OnDestroy, AfterViewInit {
             takeUntilDestroyed(),
         ).subscribe()
         this.start$.pipe(
+            switchMap(() => this.view_init$.pipe(find(Boolean))),
             switchMap(() => of(null).pipe(
                 tap(() => this.create_terminal()),
                 switchMap(() => this.start_exec()),
@@ -87,7 +89,7 @@ export class HostExecComponent implements OnDestroy, AfterViewInit {
         close$.pipe(
             take(1),
             takeUntil(this._destroyed$),
-            tap(() => this.go_back()),
+            // tap(() => this.go_back()),
         ).subscribe()
         const params = `id=${this.exec_id}&rows=${this._term!.rows}&cols=${this._term!.cols}&type=${this.program}`
         this._ws = webSocket<any>({
@@ -127,8 +129,7 @@ export class HostExecComponent implements OnDestroy, AfterViewInit {
     }
 
     ngAfterViewInit() {
-        // const r = this._router.url.split('/')[1]
-        this.start$.next()
+        this.view_init$.next(true)
     }
 
     ngOnDestroy() {
