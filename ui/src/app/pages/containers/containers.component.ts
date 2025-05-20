@@ -56,6 +56,7 @@ export class ContainersComponent implements OnInit {
             switchMap(() => webSocket<Record<string, DockerApi.ContainerDetail>>(`//${location.host}/ndc_api/docker/subscribe_containers`).pipe(
                 tap(detail_map => {
                     this.containers = Object.values(detail_map)
+                        .filter(c => !c.Config.Env.includes('NDC_ENVIRONMENT=container'))
                         .map(c => ({
                             ...c,
                             created_at: new Date(c.Created).valueOf(),

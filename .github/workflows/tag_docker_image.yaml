@@ -58,6 +58,9 @@ jobs:
       - name: Build
         if: ${{ steps.image_exists.outputs.ndc == 'false' }}
         run: yarn build
+      - name: Build Deploy
+        if: ${{ steps.image_exists.outputs.ndc == 'false' }}
+        run: cd deploy && yarn --frozen-lockfile && yarn build
       - name: Set up QEMU
         if: ${{ steps.image_exists.outputs.ndc == 'false' }}
         uses: docker/setup-qemu-action@v3

@@ -6,6 +6,15 @@
     "types": "./lib/cjs/index.d.ts",
     "license": "ISC",
     "scripts": {
-        "build": "rm -rf ./lib && rollup -c && cp -r ../ui/lib/browser ./lib/ndc"
+        "build": "rm -rf ./lib && rollup -c && cp ../ui/src/assets/.bashrc . && cp -r ../ui/lib/browser ./lib/ndc"
+    },
+    "dependencies": {
+        "@lydell/node-pty": "^1.1.0"
+    },
+    "devDependencies": {
+        "rollup": "^4.26.0",
+        "@rollup/plugin-commonjs": "^25.0.7",
+        "@rollup/plugin-json": "^6.1.0",
+        "@rollup/plugin-node-resolve": "^15.2.3"
     }
 }

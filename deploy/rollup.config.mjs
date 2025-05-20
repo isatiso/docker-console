@@ -14,4 +14,7 @@ export default [{
             preferBuiltins: true
         }),
     ],
-},]
+    external: [
+        '@lydell/node-pty'
+    ]
+}]

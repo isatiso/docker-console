@@ -18,6 +18,12 @@
             <mat-chip color="primary">Host Running</mat-chip>
         }
         <mat-chip color="primary">v{{ config.version }}</mat-chip>
+        <button mat-mini-fab matTooltip="Show log" routerLink="/host-log">
+            <mat-icon class="material-symbols-rounded">article</mat-icon>
+        </button>
+        <button mat-mini-fab matTooltip="Start a Terminal" routerLink="/host-exec">
+            <mat-icon class="material-symbols-rounded">terminal</mat-icon>
+        </button>
         <ng-content></ng-content>
     </div>
 </mat-toolbar>

@@ -5,6 +5,8 @@ import { StationLayoutComponent } from './layout/station-layout/station-layout.c
 export const routes: Routes = [{
     path: '', component: StationLayoutComponent, children: [{
         path: '', component: SidenavComponent, children: [
+            { path: 'host-exec', loadComponent: () => import('./pages/host-exec/host-exec.component').then(m => m.HostExecComponent) },
+            { path: 'host-log', loadComponent: () => import('./pages/host-exec/host-exec.component').then(m => m.HostExecComponent) },
             { path: 'container-exec/:id', loadComponent: () => import('./pages/container-exec/container-exec.component').then(m => m.ContainerExecComponent) },
             { path: 'container-inspection/:id', loadComponent: () => import('./pages/container-inspection/container-inspection.component').then(m => m.ContainerInspectionComponent) },
             { path: 'containers', loadComponent: () => import('./pages/containers/containers.component').then(m => m.ContainersComponent) },

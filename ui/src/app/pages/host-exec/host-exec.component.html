@@ -1,0 +1,23 @@
+<div class="h-16 flex items-center justify-start gap-3 px-5">
+    <button (click)="go_back()" mat-icon-button>
+        <mat-icon>arrow_back</mat-icon>
+    </button>
+    <div class="text-2xl">
+        @if (program === 'log') {
+            Docker Console Logs
+        } @else {
+            Host Shell
+        }
+    </div>
+    <div class="flex items-center justify-end gap-3 ml-auto">
+    </div>
+</div>
+
+<mat-divider></mat-divider>
+<mat-divider></mat-divider>
+<mat-divider></mat-divider>
+
+<div style="height: calc(100% - 4rem - 3px)" class="p-3 box-border relative">
+    <div #terminal class="h-full"></div>
+</div>
+
