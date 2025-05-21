@@ -46,6 +46,12 @@ jobs:
         run: yarn build
       - name: Build Deploy
         run: cd deploy && yarn --frozen-lockfile && yarn build
+      - name: Generate Random Fingerprint
+        id: generate_fingerprint
+        run: echo "fingerprint=$(openssl rand -hex 16)" >> $GITHUB_OUTPUT
+      - name: Generate Build Version
+        id: build_version
+        run: echo "build_version=$(node deploy/lib/index.js -V)" >> $GITHUB_OUTPUT
       - name: Login to Docker Hub
         if: ${{ github.event_name == 'workflow_dispatch' }}
         uses: docker/login-action@v2
@@ -87,4 +93,7 @@ jobs:
           context: ./deploy
           platforms: linux/amd64,linux/arm64,linux/arm/v7
           push: true
+          build-args: |
+            NDC_VERSION=${{ steps.build_version.outputs.build_version }}
+            NDC_FINGERPRINT=${{ steps.generate_fingerprint.outputs.fingerprint }}
           tags: ${{ steps.figure_file_hash.outputs.image_tag }}

@@ -11,6 +11,7 @@ import { DockerApi } from '@docker-console/common'
 import { catchError, of, retry, Subject, switchMap, tap, timer } from 'rxjs'
 import { webSocket } from 'rxjs/webSocket'
 import { DockerTimePipe } from '../../pipes/docker-time.pipe'
+import { ConfigService } from '../../services/config.service'
 import { DockerService } from '../../services/docker.service'
 
 @Component({
@@ -43,6 +44,7 @@ export class ContainersComponent implements OnInit {
     current_ts = Date.now()
 
     constructor(
+        private config: ConfigService,
         public router: Router,
         public docker: DockerService,
     ) {
@@ -56,7 +58,7 @@ export class ContainersComponent implements OnInit {
             switchMap(() => webSocket<Record<string, DockerApi.ContainerDetail>>(`//${location.host}/ndc_api/docker/subscribe_containers`).pipe(
                 tap(detail_map => {
                     this.containers = Object.values(detail_map)
-                        .filter(c => !c.Config.Env.includes('NDC_ENVIRONMENT=container'))
+                        .filter(c => c.Id !== this.config.container_id)
                         .map(c => ({
                             ...c,
                             created_at: new Date(c.Created).valueOf(),

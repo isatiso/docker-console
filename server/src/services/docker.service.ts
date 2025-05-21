@@ -11,6 +11,7 @@ import { finished } from 'node:stream/promises'
 import readline from 'readline'
 import { BehaviorSubject, distinctUntilChanged, filter, finalize, forkJoin, fromEvent, merge, mergeMap, of, switchMap, takeUntil, tap, timer } from 'rxjs'
 import * as tar from 'tar'
+import package_json from '../pkg.json'
 
 const if_catch = (desc: string) => <T extends AxiosError>(err: T) => {
     logger.debug('Error occurred when %s: %s %d %O', desc, err.message, err.response?.status ?? 0, err.response?.data ?? {})
@@ -25,9 +26,9 @@ const get_data = <T extends AxiosResponse>(res: T): T extends AxiosResponse<infe
 export class DockerService {
 
     version_data?: DockerApi.VersionInformation
-    hostname = process.env.HOSTNAME ?? ''
     container_id = ''
-    inside_container = process.env.NDC_ENVIRONMENT === 'container'
+    inside_container = process.env.NDC_ENVIRONMENT === 'container' && process.env.NDC_VERSION === package_json.version
+
     on$ = fromEvent(this._injector, 'start')
     off$ = fromEvent(this._injector, 'terminate')
 
@@ -100,7 +101,7 @@ export class DockerService {
                     this.list_containers({ all: true }).then(async containers => Promise.all(containers.map(async c => {
                         const info = await this.inspect_container(c.Id)
                         if (info.Id) {
-                            if (this.inside_container && !this.container_id && info.Config.Hostname === this.hostname && info.Config.Image === 'plankroot/docker-console') {
+                            if (this.inside_container && !this.container_id && info.Config.Env.includes(`NDC_FINGERPRINT=${process.env.NDC_FINGERPRINT}`)) {
                                 this.container_id = info.Id
                                 const data_mount = info.Mounts.find(m => m.Destination === '/docker-console')
                                 if (data_mount && data_mount.Type === 'bind') {
