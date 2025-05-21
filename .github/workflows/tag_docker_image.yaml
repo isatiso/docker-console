@@ -61,6 +61,14 @@ jobs:
       - name: Build Deploy
         if: ${{ steps.image_exists.outputs.ndc == 'false' }}
         run: cd deploy && yarn --frozen-lockfile && yarn build
+      - name: Generate Random Fingerprint
+        if: ${{ steps.image_exists.outputs.ndc == 'false' }}
+        id: generate_fingerprint
+        run: echo "fingerprint=$(openssl rand -hex 16)" >> $GITHUB_OUTPUT
+      - name: Generate Build Version
+        if: ${{ steps.image_exists.outputs.ndc == 'false' }}
+        id: build_version
+        run: echo "build_version=$(node deploy/lib/index.js -V)" >> $GITHUB_OUTPUT
       - name: Set up QEMU
         if: ${{ steps.image_exists.outputs.ndc == 'false' }}
         uses: docker/setup-qemu-action@v3
@@ -76,7 +84,9 @@ jobs:
           platforms: linux/amd64,linux/arm64,linux/arm/v7
           push: true
           tags: ${{ steps.figure_file_hash.outputs.image_version_tag }},plankroot/docker-console:latest
-
+          build-args: |
+            NDC_VERSION=${{ steps.build_version.outputs.build_version }}
+            NDC_FINGERPRINT=${{ steps.generate_fingerprint.outputs.fingerprint }}
       - name: Tag Commit If Not Exists
         run: |
           set -e;
