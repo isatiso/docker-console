@@ -13,7 +13,7 @@
         }
         <div class="ml-auto"></div>
         @if (config.container_id) {
-            <mat-chip color="primary">Container: {{ config.container_id.slice(0, 12) }}</mat-chip>
+            <mat-chip color="primary" routerLink="/container-inspection/{{ config.container_id }}">Container: {{ config.container_id.slice(0, 12) }}</mat-chip>
         } @else {
             <mat-chip color="primary">Host Running</mat-chip>
         }
