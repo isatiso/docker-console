@@ -29,13 +29,12 @@ import { PopupService } from '../../popup/popup.service'
 })
 export class NetworksComponent implements OnInit {
 
-    private fetch_networks$ = new Subject()
     remove_network$ = new Subject<{ id: string }>()
     prune_network$ = new Subject()
-
     networks: (DockerApi.NetworkDetail & {
         created_at: number
     })[] = []
+    private fetch_networks$ = new Subject()
 
     constructor(
         private _http: HttpClient,

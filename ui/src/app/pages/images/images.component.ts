@@ -29,13 +29,12 @@ import { PopupService } from '../../popup/popup.service'
 })
 export class ImagesComponent {
 
-    private fetch_images$ = new Subject()
     remove_image$ = new Subject<{ id: string }>()
     pull_image$ = new Subject()
-
     images: (DockerApi.ImageDetail & {
         created_at: number
     })[] = []
+    private fetch_images$ = new Subject()
 
     constructor(
         private _http: HttpClient,

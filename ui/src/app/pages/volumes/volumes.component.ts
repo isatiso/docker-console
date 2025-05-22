@@ -29,11 +29,10 @@ import { PopupService } from '../../popup/popup.service'
 })
 export class VolumesComponent implements OnInit {
 
-    private fetch_volumes$ = new Subject()
     remove_volume$ = new Subject<{ Name: string }>()
     prune_volume$ = new Subject()
-
     volumes: (DockerApi.VolumeDetail & { created_at: number })[] = []
+    private fetch_volumes$ = new Subject()
 
     constructor(
         private _http: HttpClient,

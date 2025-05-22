@@ -43,6 +43,7 @@ export class FilesComponent {
 
     list_files$ = new Subject<string>()
     rename_file$ = new Subject<string>()
+    copy$ = new Subject<string>()
     remove_file$ = new Subject<string>()
     remove_dir$ = new Subject<string>()
     create_file$ = new Subject<void>()
@@ -123,9 +124,21 @@ export class FilesComponent {
             tap(() => this.list_files$.next(this.current_dir)),
             takeUntilDestroyed(),
         ).subscribe()
+        this.copy$.pipe(
+            switchMap(filename => this.popup.input({ title: `Copy: ${filename}`, label: 'Filename', value: filename }).pipe(
+                filter(value => value && value !== filename),
+                switchMap(value => this._http.post<{ data: null }>('/ndc_api/file/cp', {
+                    dir: this.current_dir,
+                    filename: filename,
+                    target: value
+                })),
+            )),
+            tap(() => this.list_files$.next(this.current_dir)),
+            takeUntilDestroyed(),
+        ).subscribe()
         this.rename_file$.pipe(
             switchMap(filename => this.popup.input({ title: `Rename File: ${filename}`, label: 'Filename', value: filename }).pipe(
-                filter(value => !!value),
+                filter(value => value && value !== filename),
                 switchMap(value => this._http.post<{ data: null }>('/ndc_api/file/rename', {
                     dir: this.current_dir,
                     filename: filename,

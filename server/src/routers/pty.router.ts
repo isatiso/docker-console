@@ -1,8 +1,8 @@
 import { NdcResponse } from '@docker-console/common'
+import * as pty from '@lydell/node-pty'
 import { TpConfigData } from '@tarpit/core'
 import { JsonBody, Params, Post, TpRouter, TpWebSocket, WS } from '@tarpit/http'
 import { Jtl } from '@tarpit/judge'
-import * as pty from '@lydell/node-pty'
 import path from 'node:path'
 
 @TpRouter('/ndc_api/pty')

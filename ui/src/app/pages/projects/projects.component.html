@@ -72,10 +72,13 @@
             <th *matHeaderCellDef mat-header-cell> Operation</th>
             <td *matCellDef="let element" mat-cell>
                 <div class="flex flex-wrap gap-2 py-3">
-                    <button (click)="rename_file$.next(element.name)" color="primary" mat-icon-button matTooltip="Rename file">
+                    <button mat-icon-button matTooltip="Copy File" color="primary" (click)="copy$.next(element.name)">
+                        <mat-icon class="material-symbols-rounded">content_copy</mat-icon>
+                    </button>
+                    <button (click)="rename_file$.next(element.name)" color="primary" mat-icon-button matTooltip="Rename File">
                         <mat-icon class="material-symbols-rounded">edit</mat-icon>
                     </button>
-                    <button (click)="remove_file$.next(element.name)" mat-icon-button matTooltip="Remove file">
+                    <button (click)="remove_file$.next(element.name)" mat-icon-button matTooltip="Remove File">
                         <mat-icon class="material-symbols-rounded" color="warn">delete</mat-icon>
                     </button>
 

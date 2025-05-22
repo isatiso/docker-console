@@ -1,10 +1,9 @@
 import { DockerDef, projects_validator } from '@docker-console/common'
-import { TpConfigData, TpService } from '@tarpit/core'
+import { Injector, TpConfigData, TpService } from '@tarpit/core'
 import fsp from 'node:fs/promises'
 import path from 'node:path'
 import { concatMap, finalize, of, Subject, switchMap, takeUntil, tap } from 'rxjs'
 import yaml from 'yaml'
-import { DockerService } from './docker.service'
 
 @TpService()
 export class NdcProjectService {
@@ -18,7 +17,7 @@ export class NdcProjectService {
 
     constructor(
         private _config: TpConfigData,
-        private _docker: DockerService,
+        private _injector: Injector,
     ) {
         this._load_projects$.pipe(
             tap(task => this._pending_task.push(task)),
@@ -32,9 +31,9 @@ export class NdcProjectService {
             }),
         ).subscribe()
 
-        this._docker.on$.pipe(
+        this._injector.on$.pipe(
             tap(() => this._load_projects$.next([])),
-            takeUntil(this._docker.off$),
+            takeUntil(this._injector.off$),
         ).subscribe()
     }
 

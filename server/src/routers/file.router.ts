@@ -166,6 +166,25 @@ export class FileRouter {
     }
 
     @Post()
+    async cp(body: JsonBody<{
+        category?: string
+        dir?: string
+        filename: string
+        target: string
+    }>): Promise<NdcResponse<null>> {
+        const cat = body.get_if('category', /data|projects/, 'data') as 'projects' | 'data'
+        const dir = body.get_if('dir', Jtl.non_empty_string, '/')
+        const filename = body.ensure('filename', Jtl.non_empty_string)
+        const target = body.ensure('target', Jtl.non_empty_string)
+        await this.file.cp(path.join(cat, dir, filename), path.join(cat, dir, target))
+        if (cat === 'projects') {
+            await this.project.load(filename.replace(`.project.yml`, ''))
+            await this.project.load(target.replace(`.project.yml`, ''))
+        }
+        return { status: 'success', data: null }
+    }
+
+    @Post()
     async rm(body: JsonBody<{
         category?: string
         dir?: string

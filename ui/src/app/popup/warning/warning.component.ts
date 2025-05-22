@@ -28,9 +28,6 @@ export class WarningComponent<T = any> {
             actions?: ActionDef[]
         }
     ) {
-        this.actions = data.actions ?? [
-            { name: `Confirm`, data: data.pass ?? true, color: 'warn' },
-        ]
-        this.actions.unshift({ name: `Cancel`, data: null },)
+        this.actions = data.actions ?? []
     }
 }

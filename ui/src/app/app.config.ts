@@ -2,14 +2,14 @@ import { provideHttpClient, withFetch } from '@angular/common/http'
 import { ApplicationConfig, Injectable } from '@angular/core'
 import { provideAnimations } from '@angular/platform-browser/animations'
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async'
-import { PreloadingStrategy, provideRouter, Route, withDebugTracing, withEnabledBlockingInitialNavigation, withPreloading,  } from '@angular/router'
+import { PreloadingStrategy, provideRouter, Route, withEnabledBlockingInitialNavigation, withPreloading, } from '@angular/router'
 import { BehaviorSubject, catchError, filter, Observable, of, tap } from 'rxjs'
 import { routes } from './app.routes'
 
 @Injectable({ providedIn: 'root' })
 export class NdcPreloadAllModules implements PreloadingStrategy {
-    private all_routes: Record<string, boolean> = {}
     all_finished$ = new BehaviorSubject<{ loaded: number, total: number }>({ loaded: 0, total: 0 })
+    private all_routes: Record<string, boolean> = {}
 
     preload(route: Route, fn: () => Observable<any>): Observable<any> {
         this.all_routes[route.path ?? 'unknown'] = false

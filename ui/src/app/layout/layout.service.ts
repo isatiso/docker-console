@@ -7,12 +7,12 @@ export class LayoutService {
 
     title = 'Docker Console'
     sidenav_open = true
-    _theme: 'dark' | 'light' = 'dark'
 
     constructor() {
         this._theme = (typeof document !== 'undefined' && document.body.getAttribute('data-ndc-theme') === 'light') ? 'light' : 'dark'
     }
 
+    private _theme: 'dark' | 'light' = 'dark'
     get theme() {
         return this._theme
     }

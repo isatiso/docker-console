@@ -1,6 +1,6 @@
 import { AuthorizationData, ECRClient, GetAuthorizationTokenCommand } from '@aws-sdk/client-ecr'
 import { filterNonNullable, filterOutError, PullImageProgress } from '@docker-console/common'
-import { TpConfigData, TpService } from '@tarpit/core'
+import { Injector, TpConfigData, TpService } from '@tarpit/core'
 import readline from 'node:readline'
 import { BehaviorSubject, catchError, defaultIfEmpty, filter, finalize, find, from, fromEvent, map, merge, Observable, of, startWith, Subject, switchMap, takeUntil, tap, timer } from 'rxjs'
 import { AWS_DockerRepo } from '../types'
@@ -76,6 +76,7 @@ export class DownloadService {
     constructor(
         private _config: TpConfigData,
         private _docker: DockerService,
+        private _injector: Injector,
     ) {
         this._config.get('ndc.docker_repo').forEach(data => {
             this.registry_map[data.host] = data
@@ -87,7 +88,7 @@ export class DownloadService {
                 tap(() => this.pull_image$.next(null)),
                 takeUntil(this._docker.docker_down$)
             )),
-            takeUntil(this._docker.off$),
+            takeUntil(this._injector.off$),
         ).subscribe()
         this.pull_image$.pipe(
             filter(() => !this.current),
@@ -123,7 +124,7 @@ export class DownloadService {
                     this._archive_history()
                 }),
             )),
-            takeUntil(this._docker.off$),
+            takeUntil(this._injector.off$),
             finalize(() => logger.info('monitoring pull image finished')),
         ).subscribe()
     }

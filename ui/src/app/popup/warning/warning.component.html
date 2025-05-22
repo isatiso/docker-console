@@ -6,9 +6,11 @@
 </div>
 <mat-dialog-content>
     <div *ngFor="let msg of data.messages" style="font-size: 16px;">{{ msg }}</div>
+    <div class="flex flex-row-reverse justify-start items-center gap-3">
+        <button (click)="dialogRef.close(data.pass ?? true)" mat-flat-button>Confirm</button>
+        @for (action of actions; track $index) {
+            <button (click)="dialogRef.close(action.data)" mat-flat-button [color]="action.color">{{ action.name }}</button>
+        }
+        <button (click)="dialogRef.close()" mat-stroked-button>Cancel</button>
+    </div>
 </mat-dialog-content>
-<mat-dialog-actions align="end">
-    @for (action of actions; track $index) {
-        <button (click)="dialogRef.close(action.data)" mat-flat-button [color]="action.color">{{ action.name }}</button>
-    }
-</mat-dialog-actions>

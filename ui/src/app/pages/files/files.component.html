@@ -100,22 +100,28 @@
                     @if (!el.link) {
                         @switch (el.type) {
                             @case ('directory') {
-                                <button mat-icon-button matTooltip="Download selected files" color="primary" (click)="download_dir$.next(el.name)">
-                                    <mat-icon class="material-symbols-rounded">download</mat-icon>
+                                <button mat-icon-button matTooltip="Copy Directory" color="primary" (click)="copy$.next(el.name)">
+                                    <mat-icon class="material-symbols-rounded">content_copy</mat-icon>
                                 </button>
                                 <button mat-icon-button matTooltip="Rename Directory" color="primary" (click)="rename_file$.next(el.name)">
                                     <mat-icon class="material-symbols-rounded">edit</mat-icon>
+                                </button>
+                                <button mat-icon-button matTooltip="Download selected files" color="primary" (click)="download_dir$.next(el.name)">
+                                    <mat-icon class="material-symbols-rounded">download</mat-icon>
                                 </button>
                                 <button mat-icon-button matTooltip="Remove Directory" (click)="remove_dir$.next(el.name)">
                                     <mat-icon color="warn" class="material-symbols-rounded">delete</mat-icon>
                                 </button>
                             }
                             @case ('file') {
-                                <button mat-icon-button matTooltip="Download selected files" color="primary" (click)="download_file$.next(el.name)">
-                                    <mat-icon class="material-symbols-rounded">download</mat-icon>
+                                <button mat-icon-button matTooltip="Copy File" color="primary" (click)="copy$.next(el.name)">
+                                    <mat-icon class="material-symbols-rounded">content_copy</mat-icon>
                                 </button>
                                 <button mat-icon-button matTooltip="Rename File" color="primary" (click)="rename_file$.next(el.name)">
                                     <mat-icon class="material-symbols-rounded">edit</mat-icon>
+                                </button>
+                                <button mat-icon-button matTooltip="Download selected files" color="primary" (click)="download_file$.next(el.name)">
+                                    <mat-icon class="material-symbols-rounded">download</mat-icon>
                                 </button>
                                 <button mat-icon-button matTooltip="Remove File" (click)="remove_file$.next(el.name)">
                                     <mat-icon color="warn" class="material-symbols-rounded">delete</mat-icon>

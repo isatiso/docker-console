@@ -28,20 +28,16 @@ export class DockerService {
     version_data?: DockerApi.VersionInformation
     container_id = ''
     inside_container = process.env.NDC_ENVIRONMENT === 'container' && process.env.NDC_VERSION === package_json.version
-
-    on$ = fromEvent(this._injector, 'start')
-    off$ = fromEvent(this._injector, 'terminate')
-
-    private _docker_healthy$ = new BehaviorSubject<'running' | 'not_found' | 'inaccessible' | 'unknown'>('unknown')
-    docker_healthy$ = this._docker_healthy$.pipe(distinctUntilChanged())
-    docker_up$ = this.docker_healthy$.pipe(filter(status => status === 'running'))
-    docker_down$ = this.docker_healthy$.pipe(filter(status => status !== 'running'))
-
     readonly containers: Record<string, DockerApi.ContainerDetail> = {}
     readonly networks: Record<string, DockerApi.NetworkDetail> = {}
     readonly volumes: Record<string, DockerApi.VolumeDetail> = {}
     readonly images: Record<string, DockerApi.ImageDetail> = {}
-
+    readonly api_version = 'v1.41'
+    readonly base_url = `http://localhost/${this.api_version}`
+    private _docker_healthy$ = new BehaviorSubject<'running' | 'not_found' | 'inaccessible' | 'unknown'>('unknown')
+    docker_healthy$ = this._docker_healthy$.pipe(distinctUntilChanged())
+    docker_up$ = this.docker_healthy$.pipe(filter(status => status === 'running'))
+    docker_down$ = this.docker_healthy$.pipe(filter(status => status !== 'running'))
     private _containers$ = new BehaviorSubject<Record<string, DockerApi.ContainerDetail>>(this.containers)
     containers$ = this._containers$.pipe()
     private _networks$ = new BehaviorSubject<Record<string, DockerApi.NetworkDetail>>(this.networks)
@@ -50,10 +46,6 @@ export class DockerService {
     volumes$ = this._volumes$.pipe()
     private _images$ = new BehaviorSubject<Record<string, DockerApi.ImageDetail>>(this.images)
     images$ = this._images$.pipe()
-
-    readonly api_version = 'v1.41'
-    readonly base_url = `http://localhost/${this.api_version}`
-
     private _socket_path = this._config.get('ndc.socket_path')
     private _axios = axios.create({
         socketPath: this._socket_path,
@@ -67,7 +59,7 @@ export class DockerService {
         if (!this.inside_container) {
             process.env['NDC_DATA_PATH'] = path.join(this._config.get('ndc.data_path'), 'data')
         }
-        this.on$.pipe(
+        this._injector.on$.pipe(
             switchMap(() => timer(0, 500).pipe(
                 switchMap(() => of(null).pipe(
                     switchMap(() => fs.stat(this._socket_path)),
@@ -93,7 +85,7 @@ export class DockerService {
                     }),
                 )),
             )),
-            takeUntil(this.off$),
+            takeUntil(this._injector.off$),
         ).subscribe()
         this.docker_up$.pipe(
             switchMap(() => of(null).pipe(
