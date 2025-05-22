@@ -29,9 +29,6 @@ export class DockerService {
     container_id = ''
     inside_container = process.env.NDC_ENVIRONMENT === 'container' && process.env.NDC_VERSION === package_json.version
 
-    on$ = fromEvent(this._injector, 'start')
-    off$ = fromEvent(this._injector, 'terminate')
-
     private _docker_healthy$ = new BehaviorSubject<'running' | 'not_found' | 'inaccessible' | 'unknown'>('unknown')
     docker_healthy$ = this._docker_healthy$.pipe(distinctUntilChanged())
     docker_up$ = this.docker_healthy$.pipe(filter(status => status === 'running'))
@@ -67,7 +64,7 @@ export class DockerService {
         if (!this.inside_container) {
             process.env['NDC_DATA_PATH'] = path.join(this._config.get('ndc.data_path'), 'data')
         }
-        this.on$.pipe(
+        this._injector.on$.pipe(
             switchMap(() => timer(0, 500).pipe(
                 switchMap(() => of(null).pipe(
                     switchMap(() => fs.stat(this._socket_path)),
@@ -93,7 +90,7 @@ export class DockerService {
                     }),
                 )),
             )),
-            takeUntil(this.off$),
+            takeUntil(this._injector.off$),
         ).subscribe()
         this.docker_up$.pipe(
             switchMap(() => of(null).pipe(

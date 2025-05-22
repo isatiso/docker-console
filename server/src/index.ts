@@ -155,7 +155,7 @@ program.command('start')
             logger.debug('Schedule tasks:')
             tasks.forEach(item => logger.debug(`    %s %s`, item.crontab.padEnd(20, ' '), item.name))
         }
-        platform.expose(Injector)?.on('terminate', () => {
+        platform.expose(Injector)?.off$.subscribe(() => {
             setTimeout(() => process.exit(0), 500)
         })
         process.on('uncaughtException', err => {

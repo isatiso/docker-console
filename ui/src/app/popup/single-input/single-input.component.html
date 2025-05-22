@@ -8,8 +8,8 @@
         }
         <mat-hint>{{ hint }}</mat-hint>
     </mat-form-field>
+    <div class="flex flex-row-reverse justify-start items-center gap-3">
+        <button [mat-dialog-close]="data.value" color="primary" mat-raised-button>Confirm</button>
+        <button mat-dialog-close mat-raised-button>Cancel</button>
+    </div>
 </mat-dialog-content>
-<mat-dialog-actions align="end">
-    <button mat-dialog-close mat-raised-button>Cancel</button>
-    <button [mat-dialog-close]="data.value" color="primary" mat-raised-button>Confirm</button>
-</mat-dialog-actions>
