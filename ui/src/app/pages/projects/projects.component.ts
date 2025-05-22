@@ -41,6 +41,7 @@ export class ProjectsComponent implements OnInit {
     list_files$ = new Subject<void>()
     rename_file$ = new Subject<string>()
     remove_file$ = new Subject<string>()
+    copy$ = new Subject<string>()
     create_file$ = new Subject<void>()
     project_up$ = new Subject<string>()
     project_down$ = new Subject<string>()
@@ -78,10 +79,20 @@ export class ProjectsComponent implements OnInit {
         this.rename_file$.pipe(
             map(filename => filename.replace(`.project.yml`, '')),
             switchMap(filename => this.popup.input({ title: `Rename File: ${filename}`, label: 'Filename', value: filename, suffix: `.project.yml` }).pipe(
-                filter(value => !!value),
+                filter(value => value && value !== filename),
                 map(new_name => [filename + `.project.yml`, new_name + `.project.yml`] as const)
             )),
             switchMap(([filename, new_name]) => this._http.post<{ data: null }>('/ndc_api/file/rename', { category: 'projects', filename, new_name })),
+            tap(() => this.list_files$.next()),
+            takeUntilDestroyed(),
+        ).subscribe()
+        this.copy$.pipe(
+            map(filename => filename.replace(`.project.yml`, '')),
+            switchMap(filename => this.popup.input({ title: `Copy: ${filename}`, label: 'Filename', value: filename, suffix: `.project.yml` }).pipe(
+                filter(value => value && value !== filename),
+                map(new_name => [filename + `.project.yml`, new_name + `.project.yml`] as const)
+            )),
+            switchMap(([filename, target]) => this._http.post<{ data: null }>('/ndc_api/file/cp', { category: 'projects', filename, target })),
             tap(() => this.list_files$.next()),
             takeUntilDestroyed(),
         ).subscribe()
