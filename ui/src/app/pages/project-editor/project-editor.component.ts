@@ -27,21 +27,10 @@ import { VersionService } from '../../services/version.service'
 export class ProjectEditorComponent implements OnInit, OnDestroy {
 
     @ViewChild('version_editor', { static: true }) _editor?: MonacoEditorComponent
-
-    @HostListener('window:keydown', ['$event']) keyEvent(event: KeyboardEvent) {
-        if (event.key === 's' && (event.ctrlKey || event.metaKey)) {
-            event.preventDefault()
-            event.stopPropagation()
-            this.save()
-        }
-    }
-
     filename = ''
     content = ''
     edited_content = ''
-
     get_file_content$ = new Subject<void>()
-
     lang = ''
     options: monaco.editor.IStandaloneEditorConstructionOptions = { language: 'json' }
 
@@ -73,6 +62,14 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
 
     get content_changed() {
         return this.edited_content !== this.content
+    }
+
+    @HostListener('window:keydown', ['$event']) keyEvent(event: KeyboardEvent) {
+        if (event.key === 's' && (event.ctrlKey || event.metaKey)) {
+            event.preventDefault()
+            event.stopPropagation()
+            this.save()
+        }
     }
 
     find() {

@@ -15,15 +15,6 @@ export class NdcHttpHooks extends HttpHooks {
         super()
     }
 
-    private async write_request_log(ip: string, duration: string, method: string, status: string, path: string, err_msg: string = '') {
-        path = decodeURIComponent(path)
-        if (path.startsWith('/ndc_')) {
-            logger.info(' %s %s %s %s %s %s', ip.padEnd(18), duration.padStart(8), method.padEnd(7), status.padEnd(6), path, err_msg)
-        } else {
-            logger.debug('%s %s %s %s %s %s', ip.padEnd(18), duration.padStart(8), method.padEnd(7), status.padEnd(6), path, err_msg)
-        }
-    }
-
     async write_request_log_by_context(context: HttpContext) {
         const duration = assemble_duration(context)
         const err_msg = context.response.status >= 400 ? `<${context.result.code} ${context.result.msg}>` : ''
@@ -54,5 +45,14 @@ export class NdcHttpHooks extends HttpHooks {
 
     override async on_ws_close(socket: TpWebSocket, req: TpRequest, code: number): Promise<void> {
         await this.write_request_log(req.ip, 'CLOSE', 'SOCKET', code + '', req.path ?? '-')
+    }
+
+    private async write_request_log(ip: string, duration: string, method: string, status: string, path: string, err_msg: string = '') {
+        path = decodeURIComponent(path)
+        if (path.startsWith('/ndc_')) {
+            logger.info(' %s %s %s %s %s %s', ip.padEnd(18), duration.padStart(8), method.padEnd(7), status.padEnd(6), path, err_msg)
+        } else {
+            logger.debug('%s %s %s %s %s %s', ip.padEnd(18), duration.padStart(8), method.padEnd(7), status.padEnd(6), path, err_msg)
+        }
     }
 }

@@ -9,13 +9,6 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog'
 })
 export class SingleInputComponent {
 
-    @HostListener('keydown.enter', ['$event'])
-    onKeydownEnter(event: KeyboardEvent) {
-        event.preventDefault()
-        event.stopPropagation()
-        this.dialog.close(this.data.value)
-    }
-
     public static width = '1080px'
     title = this.data.title ?? ''
     label = this.data.label ?? ''
@@ -36,5 +29,12 @@ export class SingleInputComponent {
             suffix?: string
         }
     ) {
+    }
+
+    @HostListener('keydown.enter', ['$event'])
+    onKeydownEnter(event: KeyboardEvent) {
+        event.preventDefault()
+        event.stopPropagation()
+        this.dialog.close(this.data.value)
     }
 }
