@@ -14,6 +14,20 @@ A simple and lightweight tool for running Docker commands via a user-friendly in
 - **Files Integration**: Containers started via Projects automatically mount files from the `Files` section.
 - **Network and Volume Pruning**: Easily prune unused networks and volumes directly from the interface.
 
+## Quick Start
+
+Get Docker Console running in under a minute:
+
+```bash
+# One-line installation
+curl -fsSL https://raw.githubusercontent.com/isatiso/docker-console/refs/heads/master/install.sh | bash
+
+# Open in browser
+open http://localhost:7293
+```
+
+That's it! The installation script handles everything automatically.
+
 ## Prerequisites
 
 To use Docker Console, ensure the following:
@@ -27,25 +41,76 @@ To use Docker Console, ensure the following:
 
 ## Installation
 
-You can run Docker Console directly using the pre-built image available on Docker Hub:
+Docker Console provides an automated installation script for easy setup. You can install it using one of the following methods:
 
-1. Pull the Docker image:
+### Quick Installation (Recommended)
 
-   ```bash
-   docker pull plankroot/docker-console
-   ```
-
-2. Run the Docker Console container in the background with persistent settings:
+1. Download and run the installation script:
 
    ```bash
-   docker run -d --restart always -p 7293:7293 -v /var/run/docker.sock:/var/run/docker.sock -v /docker-console:/docker-console --name docker-console plankroot/docker-console
+   curl -fsSL https://raw.githubusercontent.com/isatiso/docker-console/refs/heads/master/install.sh | bash
    ```
 
-This command will:
-- Run the container in detached mode (`-d`).
-- Automatically restart the container on system reboot (`--restart always`).
-- Expose the service on port `7293`.
-- Mount the Docker socket and a configuration directory for persistent settings.
+   Or if you prefer to download and inspect the script first:
+
+   ```bash
+   wget https://raw.githubusercontent.com/isatiso/docker-console/refs/heads/master/install.sh
+   chmod +x install.sh
+   ./install.sh
+   ```
+
+2. The script will automatically:
+   - Check for Docker installation and status
+   - Pull the latest Docker Console image
+   - Handle existing container updates intelligently
+   - Resolve port conflicts automatically
+   - Start the container with optimal settings
+
+### Installation Options
+
+The installation script supports various customization options:
+
+```bash
+# Install with default settings (port 7293)
+./install.sh
+
+# Install specific version
+./install.sh --tag 1.3.5
+
+# Install on custom port
+./install.sh --port 8080
+
+# Install with custom configuration directory
+./install.sh --config-dir /home/user/docker-console
+
+# Combine multiple options
+./install.sh --tag 1.3.5 --port 8080 --config-dir /home/user/docker-console
+
+# View all available options
+./install.sh --help
+```
+
+### Manual Installation
+
+If you prefer manual installation, you can also run Docker Console directly:
+
+```bash
+docker run -d --restart always -p 7293:7293 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v /docker-console:/docker-console \
+  --name docker-console \
+  plankroot/docker-console
+```
+
+### Installation Features
+
+The automated installer provides:
+- **Smart Updates**: Compares running container with latest image
+- **Port Conflict Resolution**: Automatically finds available ports
+- **Version Management**: Install specific versions or latest
+- **Cross-Platform**: Works on Linux, macOS, and Windows (WSL)
+- **Zero Downtime**: Skips restart if already running latest version
+- **Interactive Prompts**: Guides you through configuration choices
 
 ## Usage
 
@@ -94,19 +159,23 @@ The Docker Console's GUI includes:
 
 ### Example
 
-1. Start the Docker Console:
+1. Install Docker Console using the automated script:
 
    ```bash
-   docker run -d --restart always -p 7293:7293 -v /var/run/docker.sock:/var/run/docker.sock -v /etc/docker-console:/etc/docker-console --name docker-console plankroot/docker-console
+   curl -fsSL https://raw.githubusercontent.com/plankroot/docker-console/main/install.sh | bash
    ```
 
-2. Open your web browser and navigate to:
+2. The script will guide you through the installation and automatically start the service.
+
+3. Open your web browser and navigate to:
 
    ```
    http://localhost:7293
    ```
 
-3. Use the intuitive GUI to:
+   (Or your custom port if you specified one during installation)
+
+4. Use the intuitive GUI to:
     - Monitor running containers.
     - Start and stop services.
     - View logs and troubleshoot issues.
@@ -145,5 +214,5 @@ This project is licensed under the [MIT License](LICENSE). Feel free to use, mod
 
 For any questions or feedback, feel free to create an issue in the repository or reach out to the maintainer. We appreciate your input and are here to support your experience with Docker Console.
 
-If you encounter any bugs or wish to suggest features, don’t hesitate to open a GitHub issue. Active engagement from the community helps make this tool better for everyone!
+If you encounter any bugs or wish to suggest features, don't hesitate to open a GitHub issue. Active engagement from the community helps make this tool better for everyone!
 
