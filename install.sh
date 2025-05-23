@@ -20,6 +20,96 @@ HOST_PORT="7293"
 CONTAINER_PORT="7293"
 CONFIG_DIR="/docker-console"
 
+# Shell-compatible read function
+# This function handles the difference between bash and zsh read commands
+read_input() {
+    local prompt="$1"
+    local options="$2"
+    local var_name="$3"
+    
+    # Check for auto-confirm mode (useful for CI/CD)
+    if [ "$AUTO_CONFIRM" = "true" ]; then
+        if [[ "$options" == *"-n 1 -r"* ]]; then
+            REPLY="Y"
+            echo "${prompt}${REPLY} [auto-confirmed]"
+        else
+            if [ -n "$var_name" ]; then
+                eval "$var_name=''"
+            else
+                REPLY=""
+            fi
+            echo "${prompt}[auto-confirmed]"
+        fi
+        return 0
+    fi
+    
+    # Check if we're in zsh
+    if [ -n "$ZSH_VERSION" ]; then
+        # zsh syntax
+        if [[ "$options" == *"-n 1 -r"* ]]; then
+            # For single character input in zsh
+            printf "%s" "$prompt"
+            read -k 1 REPLY
+            echo  # Add newline after single character input
+        else
+            # For normal input in zsh
+            if [ -n "$var_name" ]; then
+                read "?${prompt}" "$var_name"
+            else
+                read "?${prompt}" REPLY
+            fi
+        fi
+    else
+        # bash syntax (and most other shells)
+        if [[ "$options" == *"-n 1 -r"* ]]; then
+            # For single character input in bash
+            printf "%s" "$prompt"
+            if [[ -t 0 && -t 1 ]]; then
+                # Both stdin and stdout are terminals, safe to read interactively
+                read -n 1 -r REPLY
+            else
+                # Fallback: try to read from /dev/tty if available
+                if [ -c /dev/tty ]; then
+                    read -n 1 -r REPLY < /dev/tty
+                else
+                    # Last resort: default to Y for yes/no prompts
+                    REPLY="Y"
+                    echo -n "${REPLY} [auto-selected]"
+                fi
+            fi
+            echo  # Add newline after single character input
+        else
+            # For normal input in bash
+            printf "%s" "$prompt"
+            if [[ -t 0 && -t 1 ]]; then
+                # Both stdin and stdout are terminals
+                if [ -n "$var_name" ]; then
+                    read -r "$var_name"
+                else
+                    read -r REPLY
+                fi
+            else
+                # Fallback to /dev/tty if available
+                if [ -c /dev/tty ]; then
+                    if [ -n "$var_name" ]; then
+                        read -r "$var_name" < /dev/tty
+                    else
+                        read -r REPLY < /dev/tty
+                    fi
+                else
+                    # Default behavior
+                    if [ -n "$var_name" ]; then
+                        eval "$var_name=''"
+                    else
+                        REPLY=""
+                    fi
+                    echo -n "[auto-selected]"
+                fi
+            fi
+        fi
+    fi
+}
+
 # Print colored messages with consistent formatting
 print_info() {
     printf "${BLUE}%-10s${NC} %s\n" "[INFO]" "$1"
@@ -136,7 +226,7 @@ remove_existing_container() {
         # Check if we need to update due to image changes
         if [ "$FORCE_UPDATE" = "true" ]; then
             print_info "Image has been updated, container restart is recommended."
-            read -p "Do you want to restart the container with the new image? (Y/n): " -n 1 -r
+            read_input "Do you want to restart the container with the new image? (Y/n): " "-n 1 -r"
             echo
             if [[ $REPLY =~ ^[Nn]$ ]]; then
                 print_info "Keeping existing container running with old image."
@@ -144,7 +234,7 @@ remove_existing_container() {
                 exit 0
             fi
         else
-            read -p "Do you want to remove the existing container? (y/N): " -n 1 -r
+            read_input "Do you want to remove the existing container? (y/N): " "-n 1 -r"
             echo
             if [[ ! $REPLY =~ ^[Yy]$ ]]; then
                 print_info "Installation cancelled. Existing container will be kept."
@@ -207,7 +297,7 @@ check_port_conflict() {
         echo "│  3) Cancel installation                                                    │"
         echo "└────────────────────────────────────────────────────────────────────────────┘"
         echo
-        read -p "Please choose an option (1-3): " -n 1 -r
+        read_input "Please choose an option (1-3): " "-n 1 -r"
         echo
         
         case $REPLY in
@@ -233,7 +323,10 @@ check_port_conflict() {
             2)
                 # Ask user for a different port
                 while true; do
-                    read -p "Enter a different port number: " new_port
+                    read_input "Enter a different port number: " "" "new_port"
+                    if [ -z "$new_port" ]; then
+                        new_port="$REPLY"  # Fallback for shells that use REPLY
+                    fi
                     if [[ "$new_port" =~ ^[0-9]+$ ]] && [ "$new_port" -gt 1023 ] && [ "$new_port" -lt 65536 ]; then
                         # Check if the new port is available
                         if ! (command -v lsof &> /dev/null && lsof -Pi :$new_port -sTCP:LISTEN -t >/dev/null 2>&1) && \
@@ -433,7 +526,7 @@ main() {
         elif docker ps -a --format "table {{.Names}}" | grep -q "^${CONTAINER_NAME}$"; then
             # Container exists but not running, ask to restart
             print_info "Container exists with latest image but is not running"
-            read -p "Do you want to start the existing container? (Y/n): " -n 1 -r
+            read_input "Do you want to start the existing container? (Y/n): " "-n 1 -r"
             echo
             if [[ ! $REPLY =~ ^[Nn]$ ]]; then
                 if docker start "${CONTAINER_NAME}" > /dev/null; then
@@ -452,7 +545,6 @@ main() {
         SKIP_IMAGE_CHECK="true"  # Skip pulling since image is up to date
     fi
     
-    pull_image
     start_container
     wait_for_service
     show_completion_info

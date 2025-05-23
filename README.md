@@ -90,6 +90,44 @@ The installation script supports various customization options:
 ./install.sh --help
 ```
 
+### One-Line Installation with Parameters
+
+You can also pass parameters directly through the curl command using `bash -s --`:
+
+```bash
+# Install with default settings
+curl -fsSL https://raw.githubusercontent.com/isatiso/docker-console/refs/heads/master/install.sh | bash
+
+# Install specific version
+curl -fsSL https://raw.githubusercontent.com/isatiso/docker-console/refs/heads/master/install.sh | bash -s -- --tag 1.3.5
+
+# Install on custom port
+curl -fsSL https://raw.githubusercontent.com/isatiso/docker-console/refs/heads/master/install.sh | bash -s -- --port 8080
+
+# Install with custom configuration directory
+curl -fsSL https://raw.githubusercontent.com/isatiso/docker-console/refs/heads/master/install.sh | bash -s -- --config-dir /home/user/docker-console
+
+# Combine multiple options
+curl -fsSL https://raw.githubusercontent.com/isatiso/docker-console/refs/heads/master/install.sh | bash -s -- --tag 1.3.5 --port 8080
+
+# Get help information
+curl -fsSL https://raw.githubusercontent.com/isatiso/docker-console/refs/heads/master/install.sh | bash -s -- --help
+```
+
+**Note**: The `bash -s --` syntax allows passing arguments to the script when running through a pipe. Everything after the `--` gets passed as arguments to the installation script.
+
+### Automated Installation
+
+For CI/CD or automated deployments, you can use the `AUTO_CONFIRM` environment variable to automatically accept all prompts:
+
+```bash
+# Automated installation with auto-confirmation
+curl -fsSL https://raw.githubusercontent.com/isatiso/docker-console/refs/heads/master/install.sh | AUTO_CONFIRM=true bash
+
+# Automated installation with parameters
+curl -fsSL https://raw.githubusercontent.com/isatiso/docker-console/refs/heads/master/install.sh | AUTO_CONFIRM=true bash -s -- --port 8080
+```
+
 ### Manual Installation
 
 If you prefer manual installation, you can also run Docker Console directly:
