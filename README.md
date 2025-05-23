@@ -162,7 +162,7 @@ The Docker Console's GUI includes:
 1. Install Docker Console using the automated script:
 
    ```bash
-   curl -fsSL https://raw.githubusercontent.com/plankroot/docker-console/main/install.sh | bash
+   curl -fsSL https://raw.githubusercontent.com/isatiso/docker-console/refs/heads/master/install.sh | bash
    ```
 
 2. The script will guide you through the installation and automatically start the service.
