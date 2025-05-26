@@ -1,5 +1,5 @@
 export * from './types'
-export * from './config.type'
+export type { FileType, FileDesc } from '@tarpit/http'
 export * from './rx-helpers'
 export * from './labels'
 export * from './defs/docker-api'
