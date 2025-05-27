@@ -61,14 +61,13 @@ export class FilesComponent {
         this.download_file$.pipe(
             throttleTime(800),
             switchMap(filename => of(null).pipe(
-                switchMap(() => this._http.post('/ndc_api/file/read', {}, { params: { dir: this.current_dir, filename }, responseType: 'blob' })),
-                tap(blob => {
-                    const url = window.URL.createObjectURL(blob)
+                tap(() => {
+                    const filepath = [...this.dir_arr.map(d => d.name), filename].join('/')
+                    const url = `/ndc_api/file/read/${filepath}`
                     const a = document.createElement('a')
                     a.href = url
                     a.download = filename
                     a.click()
-                    window.URL.revokeObjectURL(url)
                 }),
             )),
             takeUntilDestroyed(),
@@ -76,14 +75,13 @@ export class FilesComponent {
         this.download_dir$.pipe(
             throttleTime(800),
             switchMap(filename => of(null).pipe(
-                switchMap(() => this._http.post('/ndc_api/file/zip', {}, { params: { dir: this.current_dir + '/' + filename }, responseType: 'blob' })),
-                tap(blob => {
-                    const url = window.URL.createObjectURL(blob)
+                tap(() => {
+                    const filepath = [...this.dir_arr.map(d => d.name), filename].join('/')
+                    const url = `/ndc_api/file/zip/${filepath}`
                     const a = document.createElement('a')
                     a.href = url
                     a.download = filename + '.zip'
                     a.click()
-                    window.URL.revokeObjectURL(url)
                 }),
             )),
             takeUntilDestroyed(),

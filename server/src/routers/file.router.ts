@@ -1,9 +1,8 @@
 import { DockerDef, FileDesc, NdcResponse } from '@docker-console/common'
-import { HttpFileManager, JsonBody, Params, Post, RawBody, throw_bad_request, TpRouter } from '@tarpit/http'
+import { Get, HttpFileManager, JsonBody, Params, PathArgs, Post, throw_bad_request, TpRequest, TpResponse, TpRouter } from '@tarpit/http'
 import { Jtl } from '@tarpit/judge'
 import { randomUUID } from 'node:crypto'
 import path from 'node:path'
-import stream from 'node:stream'
 import package_json from '../pkg.json'
 import { NdcProjectService } from '../services/project.service'
 
@@ -14,14 +13,6 @@ export class FileRouter {
         private file: HttpFileManager,
         private project: NdcProjectService,
     ) {
-    }
-
-    /**
-     * Atomic file write method using HttpFileManager APIs
-     * Uses temporary files to ensure atomicity of write operations
-     */
-    private async atomic_write(relative_path: string, content: string | Buffer | Uint8Array): Promise<void> {
-
     }
 
     @Post()
@@ -77,32 +68,21 @@ export class FileRouter {
         return { status: 'success', data: null }
     }
 
-    @Post()
-    async zip(params: Params<{
-        category?: string
-        dir?: string
-    }>): Promise<stream.Stream> {
-        const cat = params.get_first('category') || 'data'
-        const dir = params.get_first('dir') || '/'
-        if (cat !== 'projects' && cat !== 'data') {
-            throw_bad_request('category must be data or projects')
-        }
-        return this.file.zip(path.join(cat, dir))
+    @Get('zip/:filepath+')
+    @Post('zip/:filepath+')
+    async zip(args: PathArgs<{ filepath: string[] }>): Promise<ReadableStream> {
+        const filepath = args.ensure('filepath', Jtl.array_of(Jtl.non_empty_string))
+        return this.file.zip(path.join('data', ...filepath))
     }
 
-    @Post()
-    async read(params: Params<{
-        category?: string
-        dir?: string
-        filename: string
-    }>): Promise<Buffer> {
-        const filename = params.ensure('filename', Jtl.non_empty_string)
-        const cat = params.get_first('category') || 'data'
-        const dir = params.get_first('dir') || '/'
-        if (cat !== 'projects' && cat !== 'data') {
-            throw_bad_request('category must be data or projects')
-        }
-        return this.file.read(path.join(cat, dir, filename))
+    @Get('read/:filepath+')
+    @Post('read/:filepath+')
+    async read(args: PathArgs<{ filepath: string[] }>, resp: TpResponse): Promise<ReadableStream> {
+        const filepath = args.ensure('filepath', Jtl.array_of(Jtl.non_empty_string))
+        const resolved_path = path.join('data', ...filepath)
+        const stat = await this.file.lstat(resolved_path)
+        resp.set('Content-Length', stat.size)
+        return this.file.read_stream(resolved_path)
     }
 
     @Post()
@@ -123,7 +103,7 @@ export class FileRouter {
         category?: string
         dir?: string
         filename: string
-    }>, content: RawBody): Promise<NdcResponse<null>> {
+    }>, request: TpRequest): Promise<NdcResponse<null>> {
         const cat = params.get_first('category') || 'data'
         const dir = params.get_first('dir') || '/'
         const filename = params.ensure('filename', Jtl.non_empty_string)
@@ -132,8 +112,13 @@ export class FileRouter {
         }
         const relative_path = path.join(cat, dir, filename)
         const temp_relative_path = `tmp/${randomUUID()}.tmp`
-        await this.file.write(temp_relative_path, content)
-        await this.file.rename(temp_relative_path, relative_path)
+        try {
+            await this.file.write_stream(temp_relative_path, request.req)
+            await this.file.rename(temp_relative_path, relative_path)
+        } catch (err: any) {
+            await this.file.rm(temp_relative_path).catch(err => err)
+            return { status: 'error', code: err.code, message: err.message }
+        }
         return { status: 'success', data: null }
     }
 
