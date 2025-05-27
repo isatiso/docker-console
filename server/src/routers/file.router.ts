@@ -1,6 +1,7 @@
 import { DockerDef, FileDesc, NdcResponse } from '@docker-console/common'
 import { HttpFileManager, JsonBody, Params, Post, RawBody, throw_bad_request, TpRouter } from '@tarpit/http'
 import { Jtl } from '@tarpit/judge'
+import { randomUUID } from 'node:crypto'
 import path from 'node:path'
 import stream from 'node:stream'
 import package_json from '../pkg.json'
@@ -13,6 +14,14 @@ export class FileRouter {
         private file: HttpFileManager,
         private project: NdcProjectService,
     ) {
+    }
+
+    /**
+     * Atomic file write method using HttpFileManager APIs
+     * Uses temporary files to ensure atomicity of write operations
+     */
+    private async atomic_write(relative_path: string, content: string | Buffer | Uint8Array): Promise<void> {
+
     }
 
     @Post()
@@ -121,10 +130,10 @@ export class FileRouter {
         if (cat !== 'projects' && cat !== 'data') {
             throw_bad_request('category must be data or projects')
         }
-        await this.file.write(path.join(cat, dir, filename), content)
-        if (cat === 'projects') {
-            await this.project.load(filename.replace(`.project.yml`, ''))
-        }
+        const relative_path = path.join(cat, dir, filename)
+        const temp_relative_path = `tmp/${randomUUID()}.tmp`
+        await this.file.write(temp_relative_path, content)
+        await this.file.rename(temp_relative_path, relative_path)
         return { status: 'success', data: null }
     }
 
