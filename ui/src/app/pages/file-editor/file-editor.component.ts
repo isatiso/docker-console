@@ -132,6 +132,6 @@ export class FileEditorComponent implements OnInit, OnDestroy {
     }
 
     navigate(name: string) {
-        this._router.navigate(['/files', this._tools.base64_encode(name)]).then()
+        this._router.navigate(['/files', ...name.split('/').filter(Boolean)]).then()
     }
 }

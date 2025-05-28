@@ -12,9 +12,16 @@ export const routes: Routes = [{
             { path: 'containers', loadComponent: () => import('./pages/containers/containers.component').then(m => m.ContainersComponent) },
             { path: 'projects', loadComponent: () => import('./pages/projects/projects.component').then(m => m.ProjectsComponent) },
             { path: 'projects/:location', loadComponent: () => import('./pages/project-editor/project-editor.component').then(m => m.ProjectEditorComponent) },
-            { path: 'files', loadComponent: () => import('./pages/files/files.component').then(m => m.FilesComponent) },
+            {
+                matcher: (url) => {
+                    console.log('url', url)
+                    if (url[0].path === 'files') {
+                        return { consumed: url, posParams: {} }
+                    }
+                    return null
+                }, loadComponent: () => import('./pages/files/files.component').then(m => m.FilesComponent)
+            },
             { path: 'files-edit/:location', loadComponent: () => import('./pages/file-editor/file-editor.component').then(m => m.FileEditorComponent) },
-            { path: 'files/:dir', loadComponent: () => import('./pages/files/files.component').then(m => m.FilesComponent) },
             { path: 'images', loadComponent: () => import('./pages/images/images.component').then(m => m.ImagesComponent) },
             { path: 'images/:id', loadComponent: () => import('./pages/image-inspection/image-inspection.component').then(m => m.ImageInspectionComponent) },
             { path: 'logs/:id', loadComponent: () => import('./pages/logs/logs.component').then(m => m.LogsComponent) },

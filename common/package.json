@@ -12,10 +12,10 @@
     },
     "dependencies": {
         "@types/node": "^20.10.2",
-        "@tarpit/core": "^0.5.77",
-        "@tarpit/http": "^0.5.77",
-        "@tarpit/judge": "^0.5.77",
-        "@tarpit/type-tools": "^0.5.77",
+        "@tarpit/core": "^0.5.78",
+        "@tarpit/http": "^0.5.78",
+        "@tarpit/judge": "^0.5.78",
+        "@tarpit/type-tools": "^0.5.78",
         "ajv": "^8.12.0",
         "rxjs": "~7.8.2",
         "tslib": "^2.6.2"

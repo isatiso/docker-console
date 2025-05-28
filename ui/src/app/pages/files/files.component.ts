@@ -41,7 +41,7 @@ export class FilesComponent {
 
     selection = new SelectionModel<FileDesc>(true, [])
 
-    list_files$ = new Subject<string>()
+    list_files$ = new Subject<void>()
     rename_file$ = new Subject<string>()
     copy$ = new Subject<string>()
     remove_file$ = new Subject<string>()
@@ -87,7 +87,8 @@ export class FilesComponent {
             takeUntilDestroyed(),
         ).subscribe()
         this.list_files$.pipe(
-            switchMap(dir => this._http.post<{ data: { files: FileDesc[] } }>('/ndc_api/file/ls', { dir })),
+            map(() => [...this.dir_arr.map(d => d.name)].join('/')),
+            switchMap(dir => this._http.post<{ data: { files: FileDesc[] } }>(`/ndc_api/file/ls/${dir}`, {})),
             map(res => res.data.files),
             map(files => files.sort((a, b) => a.type.localeCompare(b.type) || a.name.localeCompare(b.name))),
             tap(files => this.files = files),
@@ -105,7 +106,7 @@ export class FilesComponent {
             })),
             filter(value => !!value),
             switchMap(filename => this._http.post<{ data: null }>('/ndc_api/file/rm', { dir: this.current_dir, filename })),
-            tap(() => this.list_files$.next(this.current_dir)),
+            tap(() => this.list_files$.next()),
             takeUntilDestroyed(),
         ).subscribe()
         this.remove_dir$.pipe(
@@ -119,7 +120,7 @@ export class FilesComponent {
             })),
             filter(value => !!value),
             switchMap(dirname => this._http.post<{ data: null }>('/ndc_api/file/rmdir', { dir: this.current_dir, dirname })),
-            tap(() => this.list_files$.next(this.current_dir)),
+            tap(() => this.list_files$.next()),
             takeUntilDestroyed(),
         ).subscribe()
         this.copy$.pipe(
@@ -131,7 +132,7 @@ export class FilesComponent {
                     target: value
                 })),
             )),
-            tap(() => this.list_files$.next(this.current_dir)),
+            tap(() => this.list_files$.next()),
             takeUntilDestroyed(),
         ).subscribe()
         this.rename_file$.pipe(
@@ -143,7 +144,7 @@ export class FilesComponent {
                     new_name: value
                 })),
             )),
-            tap(() => this.list_files$.next(this.current_dir)),
+            tap(() => this.list_files$.next()),
             takeUntilDestroyed(),
         ).subscribe()
         this.create_file$.pipe(
@@ -155,7 +156,7 @@ export class FilesComponent {
                     content: ''
                 })),
             )),
-            tap(() => this.list_files$.next(this.current_dir)),
+            tap(() => this.list_files$.next()),
             takeUntilDestroyed(),
         ).subscribe()
         this.create_dir$.pipe(
@@ -166,16 +167,17 @@ export class FilesComponent {
                     name: value
                 })),
             )),
-            tap(() => this.list_files$.next(this.current_dir)),
+            tap(() => this.list_files$.next()),
             takeUntilDestroyed(),
         ).subscribe()
-        this._route.params.pipe(
-            tap(params => {
-                this.current_dir = params['dir'] ? this._tools.base64_decode(params['dir']) : '/'
-                const dir_arr = this.current_dir.split('/').filter(Boolean)
+        this._route.url.pipe(
+            tap(url => console.log(url)),
+            tap(url => {
+                const dir_arr = url.slice(1).map(u => u.path)
+                this.current_dir = '/' + dir_arr.join('/') + '/'
                 this.dir_arr = dir_arr.map((_, i) => ({ name: dir_arr[i], path: '/' + dir_arr.slice(0, i + 1).join('/') }))
             }),
-            tap(() => this.list_files$.next(this.current_dir)),
+            tap(() => this.list_files$.next()),
             takeUntilDestroyed(),
         ).subscribe()
     }
@@ -200,7 +202,7 @@ export class FilesComponent {
     }
 
     navigate(name: string) {
-        this._router.navigate(['/files', this._tools.base64_encode(name)]).then()
+        this._router.navigate(['/files', ...name.split('/').filter(Boolean)]).then()
     }
 
     go_edit(name: string) {

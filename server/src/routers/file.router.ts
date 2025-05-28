@@ -31,14 +31,11 @@ export class FileRouter {
         return { status: 'success', data: this.project.projects }
     }
 
-    @Post()
-    async ls(body: JsonBody<{
-        category?: string
-        dir?: string
-    }>): Promise<NdcResponse<{ files: FileDesc[] }>> {
-        const cat = body.get_if('category', /data|projects/, 'data')
-        const dir = body.get_if('dir', Jtl.non_empty_string, '/')
-        const files = await this.file.ls(path.join(cat, dir))
+    @Get('ls/:filepath*')
+    @Post('ls/:filepath*')
+    async ls(args: PathArgs<{ filepath: string[] }>): Promise<NdcResponse<{ files: FileDesc[] }>> {
+        const filepath = args.get('filepath') ?? []
+        const files = await this.file.ls(path.join('data', ...filepath))
         return { status: 'success', data: { files } }
     }
 
