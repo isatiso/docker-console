@@ -1,14 +1,5 @@
 <div class="h-16 flex items-center justify-start gap-3 px-4">
-    <div class="flex items-baseline justify-start gap-3">
-        <span class="text-2xl">Files</span>
-        <div routerLink="/files" class="file-link text-base">root</div>
-        @for (p of dir_arr; track $index) {
-            <span>/</span>
-            <span class="file-link" (click)="navigate(p.path + '/')">{{ p.name }}</span>
-        }
-        <span>/</span>
-        <span>{{ filename }}</span>
-    </div>
+    <ndc-breadcrumbs/>
     <div class="flex items-center justify-end gap-3 ml-auto">
         @if (content_changed) {
             <button mat-flat-button color="accent" (click)="save()">Save</button>
@@ -20,6 +11,11 @@
 <mat-divider></mat-divider>
 <mat-divider></mat-divider>
 
-<div style="height: calc(100% - 4rem - 3px)" class="w-full overflow-auto">
-    <ndc-monaco-editor #version_editor style="height: 100%" [options]="{ language: lang }" [(ngModel)]="edited_content"></ndc-monaco-editor>
+<div style="height: calc(100% - 4rem - 3px)" class="w-full overflow-auto relative">
+    @if (downloading) {
+        <div class="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black/50" style="z-index: 999">
+            <mat-icon class="animate-spin material-symbols-rounded">progress_activity</mat-icon>
+        </div>
+    }
+    <ndc-monaco-editor #version_editor style="height: 100%" [options]="{ language: bread.lang }" [(ngModel)]="edited_content"></ndc-monaco-editor>
 </div>

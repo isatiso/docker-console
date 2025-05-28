@@ -14,14 +14,20 @@ export const routes: Routes = [{
             { path: 'projects/:location', loadComponent: () => import('./pages/project-editor/project-editor.component').then(m => m.ProjectEditorComponent) },
             {
                 matcher: (url) => {
-                    console.log('url', url)
-                    if (url[0].path === 'files') {
+                    if (url.length > 0 && url[0].path === 'files') {
                         return { consumed: url, posParams: {} }
                     }
                     return null
                 }, loadComponent: () => import('./pages/files/files.component').then(m => m.FilesComponent)
             },
-            { path: 'files-edit/:location', loadComponent: () => import('./pages/file-editor/file-editor.component').then(m => m.FileEditorComponent) },
+            {
+                matcher: (url) => {
+                    if (url.length > 0 && url[0].path === 'preview') {
+                        return { consumed: url, posParams: {} }
+                    }
+                    return null
+                }, loadComponent: () => import('./pages/file-editor/file-editor.component').then(m => m.FileEditorComponent)
+            },
             { path: 'images', loadComponent: () => import('./pages/images/images.component').then(m => m.ImagesComponent) },
             { path: 'images/:id', loadComponent: () => import('./pages/image-inspection/image-inspection.component').then(m => m.ImageInspectionComponent) },
             { path: 'logs/:id', loadComponent: () => import('./pages/logs/logs.component').then(m => m.LogsComponent) },

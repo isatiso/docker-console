@@ -1,0 +1,15 @@
+<div class="flex items-baseline justify-start gap-3">
+    <div class="text-2xl">Files</div>
+    @if (fb.segments) {
+        <div class="file-link text-base" (click)="fb.step_out('')">root</div>
+    }
+    @for (p of fb.segments; track $index) {
+        @if ($last) {
+            <span>/</span>
+            <span>{{ p.name }}</span>
+        } @else {
+            <span>/</span>
+            <span class="file-link text-base" (click)="fb.step_out(p.path + '/')">{{ p.name }}</span>
+        }
+    }
+</div>
