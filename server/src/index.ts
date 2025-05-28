@@ -11,6 +11,7 @@ import pretty from 'pino-pretty'
 import package_json from './pkg.json'
 import { DockerRouter } from './routers/docker.router'
 import { FileRouter } from './routers/file.router'
+import { ProjectRouter } from './routers/project.router'
 import { PtyRouter } from './routers/pty.router'
 import { ServiceRouter } from './routers/service.router'
 import { StaticRouter } from './routers/static.router'
@@ -139,6 +140,7 @@ program.command('start')
             .import(PtyRouter)
             .import(StaticRouter)
             .import(FileRouter)
+            .import(ProjectRouter)
             .import(ServiceRouter)
             .import(UpdaterSchedule)
 

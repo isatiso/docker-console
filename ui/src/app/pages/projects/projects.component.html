@@ -1,7 +1,5 @@
 <div class="h-16 flex items-center justify-start gap-3 px-4">
-    <div class="flex items-baseline justify-start gap-3">
-        <div class="text-2xl">Projects</div>
-    </div>
+    <ndc-breadcrumbs/>
     <div class="flex items-center justify-end gap-3 ml-auto">
         <button (click)="create_file$.next()" color="primary" mat-mini-fab matTooltip="Create new file">
             <mat-icon class="material-symbols-rounded">note_add</mat-icon>

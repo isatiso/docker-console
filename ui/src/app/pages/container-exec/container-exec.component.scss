@@ -6,15 +6,15 @@
 }
 
 .xterm .xterm-viewport::-webkit-scrollbar-thumb {
-    background-color: rgba(128, 128, 128, 0.4); /* 淡淡的白色滑块 */
+    background-color: rgba(128, 128, 128, 0.4); /* light gray scrollbar thumb */
     border-radius: 4px;
 }
 
 .xterm .xterm-viewport::-webkit-scrollbar-track {
-    background: transparent; /* 不显示轨道 */
+    background: transparent; /* hide track */
 }
 
 .xterm .xterm-viewport {
-    scrollbar-color: rgba(128, 128, 128, 0.4) transparent; /* Firefox 兼容 */
+    scrollbar-color: rgba(128, 128, 128, 0.4) transparent; /* Firefox compatibility */
     scrollbar-width: thin;
 }

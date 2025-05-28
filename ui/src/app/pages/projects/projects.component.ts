@@ -10,6 +10,8 @@ import { MatTooltip } from '@angular/material/tooltip'
 import { ActivatedRoute, Router } from '@angular/router'
 import { DockerDef } from '@docker-console/common'
 import { filter, map, Subject, switchMap, tap } from 'rxjs'
+import { BreadcrumbsComponent } from '../../layout/breadcrumbs/breadcrumbs.component'
+import { BreadcrumbsService } from '../../layout/breadcrumbs/breadcrumbs.service'
 import { BytesPipe } from '../../pipes/bytes.pipe'
 import { PopupService } from '../../popup/popup.service'
 import { ToolsService } from '../../services/tools.service'
@@ -29,6 +31,7 @@ interface DefinitionsResponse {
         MatTableModule,
         MatIconButton,
         BytesPipe,
+        BreadcrumbsComponent,
     ],
     templateUrl: './projects.component.html',
     styleUrl: './projects.component.scss'
@@ -52,9 +55,10 @@ export class ProjectsComponent implements OnInit {
         private _tools: ToolsService,
         private _route: ActivatedRoute,
         private popup: PopupService,
+        public bread: BreadcrumbsService,
     ) {
         this.list_files$.pipe(
-            switchMap(category => this._http.post<DefinitionsResponse>('/ndc_api/file/projects', { category }).pipe(
+            switchMap(category => this._http.post<DefinitionsResponse>('/ndc_api/project/list', {}).pipe(
                 map(res => res.data),
                 tap(data => this.definition_stats = data),
                 tap(data => this.files = Object.values(data).sort((a, b) => b.mtimeMs - a.mtimeMs || a.name.localeCompare(b.name)))
@@ -72,7 +76,7 @@ export class ProjectsComponent implements OnInit {
                 pass: `${filename}.project.yml`
             })),
             filter(value => !!value),
-            switchMap(filename => this._http.post<{ data: null }>('/ndc_api/file/rm', { category: 'projects', filename })),
+            switchMap(filename => this._http.post<{ data: null }>(`/ndc_api/project/rm/${filename}`, '')),
             tap(() => this.list_files$.next()),
             takeUntilDestroyed(),
         ).subscribe()
@@ -82,7 +86,7 @@ export class ProjectsComponent implements OnInit {
                 filter(value => value && value !== filename),
                 map(new_name => [filename + `.project.yml`, new_name + `.project.yml`] as const)
             )),
-            switchMap(([filename, new_name]) => this._http.post<{ data: null }>('/ndc_api/file/rename', { category: 'projects', filename, new_name })),
+            switchMap(([old, to]) => this._http.post<{ data: null }>('/ndc_api/project/rename', { old, to })),
             tap(() => this.list_files$.next()),
             takeUntilDestroyed(),
         ).subscribe()
@@ -92,7 +96,7 @@ export class ProjectsComponent implements OnInit {
                 filter(value => value && value !== filename),
                 map(new_name => [filename + `.project.yml`, new_name + `.project.yml`] as const)
             )),
-            switchMap(([filename, target]) => this._http.post<{ data: null }>('/ndc_api/file/cp', { category: 'projects', filename, target })),
+            switchMap(([src, dst]) => this._http.post<{ data: null }>('/ndc_api/project/cp', { src, dst })),
             tap(() => this.list_files$.next()),
             takeUntilDestroyed(),
         ).subscribe()
@@ -100,7 +104,7 @@ export class ProjectsComponent implements OnInit {
             switchMap(() => this.popup.input({ title: `Create File`, label: 'Filename', value: '', suffix: `.project.yml` })),
             filter(value => !!value),
             map(value => value + `.project.yml`),
-            switchMap(filename => this._http.post<{ data: null }>('/ndc_api/file/write_text', { category: 'projects', filename, content: '' })),
+            switchMap(filename => this._http.post<{ data: null }>(`/ndc_api/project/write/${filename}`, '')),
             tap(() => this.list_files$.next()),
             takeUntilDestroyed(),
         ).subscribe()
@@ -114,7 +118,8 @@ export class ProjectsComponent implements OnInit {
             tap(() => this.list_files$.next()),
             takeUntilDestroyed(),
         ).subscribe()
-        this._route.params.pipe(
+        this._route.url.pipe(
+            tap(url => this.bread.update(url)),
             tap(() => this.list_files$.next()),
             takeUntilDestroyed(),
         ).subscribe()
@@ -128,6 +133,6 @@ export class ProjectsComponent implements OnInit {
     }
 
     go_edit(name: string) {
-        this._router.navigate(['/projects', this._tools.base64_encode(name)]).then()
+        this._router.navigate(['/projects', name]).then()
     }
 }

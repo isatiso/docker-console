@@ -1,0 +1,11 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+1. The project uses Yarn as its package manager.
+2. The common folder contains shared types and utilities used by both frontend and backend.
+3. The server folder contains the backend implementation, using the @tarpit framework, github url is https://github.com/isatiso/node-tarpit
+4. The ui folder contains the frontend implementation, using Angular.
+5. The deploy folder is used for building Docker images.
+6. 所有函数名以及变量名应该用下划线命名方式。
