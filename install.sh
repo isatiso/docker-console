@@ -18,7 +18,9 @@ IMAGE_NAME="plankroot/docker-console"
 IMAGE_TAG="latest"
 HOST_PORT="7293"
 CONTAINER_PORT="7293"
-CONFIG_DIR="/docker-console"
+CONFIG_DIR="$HOME/.docker-console"
+AUTO_CONFIRM="false"
+FORCE_UPDATE_FLAG="false"
 
 # Shell-compatible read function
 # This function handles the difference between bash and zsh read commands
@@ -26,17 +28,31 @@ read_input() {
     local prompt="$1"
     local options="$2"
     local var_name="$3"
+    local default_value="$4"  # Optional default value for auto-confirm mode
 
-    # Check for auto-confirm mode (useful for CI/CD)
+    # Check for auto-confirm mode (useful for CI/CD or -y option)
     if [ "$AUTO_CONFIRM" = "true" ]; then
         if [[ "$options" == *"-n 1 -r"* ]]; then
-            REPLY="Y"
+            # For single character input, use default or Y
+            if [ -n "$default_value" ]; then
+                REPLY="$default_value"
+            else
+                REPLY="Y"
+            fi
             echo "${prompt}${REPLY} [auto-confirmed]"
         else
             if [ -n "$var_name" ]; then
-                eval "$var_name=''"
+                if [ -n "$default_value" ]; then
+                    eval "$var_name='$default_value'"
+                else
+                    eval "$var_name=''"
+                fi
             else
-                REPLY=""
+                if [ -n "$default_value" ]; then
+                    REPLY="$default_value"
+                else
+                    REPLY=""
+                fi
             fi
             echo "${prompt}[auto-confirmed]"
         fi
@@ -72,8 +88,12 @@ read_input() {
                 if [ -c /dev/tty ]; then
                     read -n 1 -r REPLY < /dev/tty
                 else
-                    # Last resort: default to Y for yes/no prompts
-                    REPLY="Y"
+                    # Last resort: use default or Y for yes/no prompts
+                    if [ -n "$default_value" ]; then
+                        REPLY="$default_value"
+                    else
+                        REPLY="Y"
+                    fi
                     echo -n "${REPLY} [auto-selected]"
                 fi
             fi
@@ -99,9 +119,17 @@ read_input() {
                 else
                     # Default behavior
                     if [ -n "$var_name" ]; then
-                        eval "$var_name=''"
+                        if [ -n "$default_value" ]; then
+                            eval "$var_name='$default_value'"
+                        else
+                            eval "$var_name=''"
+                        fi
                     else
-                        REPLY=""
+                        if [ -n "$default_value" ]; then
+                            REPLY="$default_value"
+                        else
+                            REPLY=""
+                        fi
                     fi
                     echo -n "[auto-selected]"
                 fi
@@ -184,10 +212,13 @@ check_image_updates() {
 
     # Pull latest image to check for updates
     print_info "Pulling Docker Console image (${IMAGE_TAG})..."
-    if docker pull "${full_image_name}" > /dev/null 2>&1; then
+    local pull_output
+    if pull_output=$(docker pull "${full_image_name}" 2>&1); then
         print_success "Image pull completed"
     else
         print_error "Image pull failed"
+        echo "Docker pull error output:"
+        echo "$pull_output"
         exit 1
     fi
 
@@ -211,6 +242,8 @@ check_image_updates() {
 
 # Stop and remove existing container with update check
 remove_existing_container() {
+    local update_reason="$1"  # "force" or "image_update"
+    
     if docker ps -a --format "table {{.Names}}" | grep -q "^${CONTAINER_NAME}$"; then
         print_warning "Found existing ${CONTAINER_NAME} container."
 
@@ -223,24 +256,26 @@ remove_existing_container() {
 
         echo
 
-        # Check if we need to update due to image changes
-        if [ "$FORCE_UPDATE" = "true" ]; then
+        # Show appropriate message based on update reason
+        if [ "$update_reason" = "force" ]; then
+            print_info "Force update requested, container will be restarted."
+            read_input "Do you want to restart the container with the new image? (Y/n): " "-n 1 -r"
+        elif [ "$update_reason" = "image_update" ]; then
             print_info "Image has been updated, container restart is recommended."
             read_input "Do you want to restart the container with the new image? (Y/n): " "-n 1 -r"
-            echo
-            if [[ $REPLY =~ ^[Nn]$ ]]; then
-                print_info "Keeping existing container running with old image."
-                print_warning "To use the new image, restart the container manually later."
-                exit 0
-            fi
         else
             read_input "Do you want to remove the existing container? (y/N): " "-n 1 -r"
-            echo
-            if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-                print_info "Installation cancelled. Existing container will be kept."
-                print_info "To proceed, please manually remove the container or use a different name with --name option."
-                exit 0
-            fi
+        fi
+        
+        echo
+        if [[ $REPLY =~ ^[Nn]$ ]]; then
+            print_info "Keeping existing container running with old image."
+            print_warning "To use the new image, restart the container manually later."
+            exit 0
+        elif [[ ! $REPLY =~ ^[Yy]$ ]] && [ "$update_reason" != "force" ] && [ "$update_reason" != "image_update" ]; then
+            print_info "Installation cancelled. Existing container will be kept."
+            print_info "To proceed, please manually remove the container or use a different name with --name option."
+            exit 0
         fi
 
         print_info "Removing existing ${CONTAINER_NAME} container..."
@@ -256,10 +291,13 @@ pull_image() {
     # But we keep it for cases where we skip the update check
     if [ "$SKIP_IMAGE_CHECK" = "true" ]; then
         print_info "Pulling Docker Console image (${IMAGE_TAG})..."
-        if docker pull "${IMAGE_NAME}:${IMAGE_TAG}"; then
+        local pull_output
+        if pull_output=$(docker pull "${IMAGE_NAME}:${IMAGE_TAG}" 2>&1); then
             print_success "Image pull completed"
         else
             print_error "Image pull failed"
+            echo "Docker pull error output:"
+            echo "$pull_output"
             exit 1
         fi
     fi
@@ -297,7 +335,7 @@ check_port_conflict() {
         echo "│  3) Cancel installation                                                    │"
         echo "└────────────────────────────────────────────────────────────────────────────┘"
         echo
-        read_input "Please choose an option (1-3): " "-n 1 -r"
+        read_input "Please choose an option (1-3): " "-n 1 -r" "" "3"
         echo
 
         case $REPLY in
@@ -357,6 +395,16 @@ check_port_conflict() {
 # Create and start container
 start_container() {
     print_info "Starting Docker Console container..."
+
+    # Create config directory if it doesn't exist
+    if [ ! -d "${CONFIG_DIR}" ]; then
+        print_info "Creating config directory: ${CONFIG_DIR}"
+        mkdir -p "${CONFIG_DIR}" || {
+            print_error "Failed to create config directory: ${CONFIG_DIR}"
+            exit 1
+        }
+        print_success "Config directory created"
+    fi
 
     # Check for port conflicts
     check_port_conflict
@@ -470,20 +518,33 @@ main() {
                 IMAGE_TAG="$2"
                 shift 2
                 ;;
+            -y|--yes)
+                AUTO_CONFIRM="true"
+                shift
+                ;;
+            -f|--force)
+                FORCE_UPDATE_FLAG="true"
+                shift
+                ;;
             -h|--help)
                 echo "Usage: $0 [options]"
                 echo
                 echo "Options:"
                 echo "  -p, --port PORT        Set host port (default: 7293)"
                 echo "  -n, --name NAME        Set container name (default: docker-console)"
-                echo "  -c, --config-dir DIR   Set config directory (default: /docker-console)"
+                echo "  -c, --config-dir DIR   Set config directory (default: $HOME/.docker-console)"
                 echo "  -t, --tag TAG          Set image tag (default: latest)"
+                echo "  -y, --yes              Auto-confirm all prompts (non-interactive mode)"
+                echo "  -f, --force            Force update container even if image is up to date"
                 echo "  -h, --help             Show this help message"
                 echo
                 echo "Examples:"
                 echo "  $0                              # Install latest version"
-                echo "  $0 --tag 1.3.5                 # Install specific version"
-                echo "  $0 --port 8080 --tag 1.3.5     # Custom port and version"
+                echo "  $0 --tag 1.3.5                  # Install specific version"
+                echo "  $0 --port 8080 --tag 1.3.5      # Custom port and version"
+                echo "  $0 -y                           # Non-interactive installation"
+                echo "  $0 -f                           # Force update existing container"
+                echo "  $0 -y -f                        # Non-interactive force update"
                 echo
                 exit 0
                 ;;
@@ -510,11 +571,24 @@ main() {
     # Execute installation steps
     check_docker
 
-    # Check for image updates first
-    if check_image_updates; then
-        # Image has updates or no existing container, need to handle existing container
-        FORCE_UPDATE="true"
-        remove_existing_container
+    # Check for image updates first, or force update if requested
+    if [ "$FORCE_UPDATE_FLAG" = "true" ]; then
+        # Force update requested - pull latest image and restart container
+        print_info "Force update requested - pulling latest image..."
+        local pull_output
+        if pull_output=$(docker pull "${IMAGE_NAME}:${IMAGE_TAG}" 2>&1); then
+            print_success "Image pull completed"
+        else
+            print_error "Image pull failed"
+            echo "Docker pull error output:"
+            echo "$pull_output"
+            exit 1
+        fi
+        remove_existing_container "force"
+        SKIP_IMAGE_CHECK="true"
+    elif check_image_updates; then
+        # Image has updates, need to handle existing container
+        remove_existing_container "image_update"
         SKIP_IMAGE_CHECK="true"  # Skip pulling again since we already did it
     else
         # Container is already using the latest image, check if it's running
