@@ -11,6 +11,7 @@ import pretty from 'pino-pretty'
 import package_json from './pkg.json'
 import { DockerRouter } from './routers/docker.router'
 import { FileRouter } from './routers/file.router'
+import { ProjectRouter } from './routers/project.router'
 import { PtyRouter } from './routers/pty.router'
 import { ServiceRouter } from './routers/service.router'
 import { StaticRouter } from './routers/static.router'
@@ -105,6 +106,7 @@ program.command('start')
         fs.mkdirSync(log_path, { recursive: true })
         fs.mkdirSync(config_data.get('ndc.data_path') + '/projects', { recursive: true })
         fs.mkdirSync(config_data.get('ndc.data_path') + '/data', { recursive: true })
+        fs.mkdirSync(config_data.get('ndc.data_path') + '/tmp', { recursive: true })
 
         const logger_fd = fs.openSync(`${log_path}/${log_file}`, 'a')
         const logger: Logger<string> = pino({ level: ndc_config_data.log_level }, pino.multistream([
@@ -138,6 +140,7 @@ program.command('start')
             .import(PtyRouter)
             .import(StaticRouter)
             .import(FileRouter)
+            .import(ProjectRouter)
             .import(ServiceRouter)
             .import(UpdaterSchedule)
 

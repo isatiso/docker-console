@@ -1,0 +1,11 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+1. This project uses Yarn as the package manager.
+2. The `common` folder contains shared types and utilities for both frontend and backend.
+3. The `server` folder houses the backend implementation built with the @tarpit framework (https://github.com/isatiso/node-tarpit).
+4. The `ui` folder contains the Angular-based frontend implementation.
+5. The `deploy` folder is used for Docker image builds.
+6. Use snake_case naming convention for all function and variable names.

@@ -1,10 +1,5 @@
 <div class="h-16 flex items-center justify-start gap-3 px-4">
-    <div class="flex items-baseline justify-start gap-3">
-        <div class="text-2xl">Projects</div>
-        <div class="file-link text-base flex items-center justify-start" routerLink="/projects">root</div>
-        /
-        <div>{{ filename }}</div>
-    </div>
+    <ndc-breadcrumbs/>
     <div class="flex items-center justify-end gap-3 ml-auto">
         @if (content_changed) {
             <button mat-flat-button color="accent" (click)="save()">Save</button>

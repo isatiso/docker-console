@@ -5,9 +5,11 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop'
 import { FormsModule } from '@angular/forms'
 import { MatButton } from '@angular/material/button'
 import { MatDivider } from '@angular/material/divider'
-import { ActivatedRoute, Router, RouterLink } from '@angular/router'
+import { ActivatedRoute, Router } from '@angular/router'
 import type * as monaco from 'monaco-editor'
-import { filter, Subject, switchMap, tap } from 'rxjs'
+import { Subject, switchMap, tap } from 'rxjs'
+import { BreadcrumbsComponent } from '../../layout/breadcrumbs/breadcrumbs.component'
+import { BreadcrumbsService } from '../../layout/breadcrumbs/breadcrumbs.service'
 import { MonacoEditorComponent } from '../../monaco/monaco-editor.component'
 import { ToolsService } from '../../services/tools.service'
 import { VersionService } from '../../services/version.service'
@@ -19,7 +21,7 @@ import { VersionService } from '../../services/version.service'
         MatDivider,
         MonacoEditorComponent,
         MatButton,
-        RouterLink
+        BreadcrumbsComponent
     ],
     templateUrl: './project-editor.component.html',
     styleUrl: './project-editor.component.scss'
@@ -40,21 +42,16 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
         private _router: Router,
         private _tools: ToolsService,
         public versions: VersionService,
+        public bread: BreadcrumbsService,
         private route: ActivatedRoute,
     ) {
         this.get_file_content$.pipe(
-            switchMap(() => this._http.post<{ data: { content: string } }>('/ndc_api/file/read_text', { category: 'projects', dir: '/', filename: this.filename })),
-            tap(res => this.content = res.data.content),
-            tap(res => this.edited_content = this.content),
-            tap(res => console.log(this.content)),
+            switchMap(() => this._http.get(`/ndc_api/project/read/${this.bread.filename}`, { responseType: 'text' })),
+            tap(res => this.edited_content = this.content = res),
             takeUntilDestroyed(),
         ).subscribe()
-        this.route.params.pipe(
-            tap(params => {
-                this.filename = this._tools.base64_decode(params['location'])
-                this.lang = this.filename.split('.').slice(-1)[0]
-            }),
-            filter(() => !!this.filename),
+        this.route.url.pipe(
+            tap(url => this.bread.update(url)),
             tap(() => this.get_file_content$.next()),
             takeUntilDestroyed(),
         ).subscribe()

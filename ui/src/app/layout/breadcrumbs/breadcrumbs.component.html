@@ -1,0 +1,15 @@
+<div class="flex items-baseline justify-start gap-3">
+    <div class="text-2xl">{{ bread.category | titlecase }}</div>
+    @if (bread.segments.length) {
+        <div class="file-link text-base" (click)="bread.step_out('')">root</div>
+    }
+    @for (p of bread.segments; track $index) {
+        @if ($last) {
+            <span>/</span>
+            <span>{{ p.name }}</span>
+        } @else {
+            <span>/</span>
+            <span class="file-link text-base" (click)="bread.step_out(p.path + '/')">{{ p.name }}</span>
+        }
+    }
+</div>

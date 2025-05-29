@@ -26,7 +26,7 @@ read_input() {
     local prompt="$1"
     local options="$2"
     local var_name="$3"
-    
+
     # Check for auto-confirm mode (useful for CI/CD)
     if [ "$AUTO_CONFIRM" = "true" ]; then
         if [[ "$options" == *"-n 1 -r"* ]]; then
@@ -42,7 +42,7 @@ read_input() {
         fi
         return 0
     fi
-    
+
     # Check if we're in zsh
     if [ -n "$ZSH_VERSION" ]; then
         # zsh syntax
@@ -131,12 +131,12 @@ print_error() {
 show_banner() {
     echo -e "${BLUE}"
     cat << 'EOF'
-  ____             _               ____                      _      
- |  _ \  ___   ___| | _____ _ __  / ___|___  _ __  ___  ___ | | ___ 
+  ____             _               ____                      _
+ |  _ \  ___   ___| | _____ _ __  / ___|___  _ __  ___  ___ | | ___
  | | | |/ _ \ / __| |/ / _ \ '__|| |   / _ \| '_ \/ __|/ _ \| |/ _ \
  | |_| | (_) | (__|   <  __/ |   | |__| (_) | | | \__ \ (_) | |  __/
  |____/ \___/ \___|_|\_\___|_|    \____\___/|_| |_|___/\___/|_|\___|
-                                                                    
+
 EOF
     echo -e "${NC}"
     echo -e "${BLUE}                   🐳 Docker Console Installer 🐳${NC}"
@@ -152,24 +152,24 @@ check_docker() {
         print_info "To install Docker, visit: https://docs.docker.com/get-docker/"
         exit 1
     fi
-    
+
     print_info "Checking if Docker is running..."
     if ! docker info &> /dev/null; then
         print_error "Docker service is not running. Please start Docker service."
         exit 1
     fi
-    
+
     print_success "Docker check passed"
 }
 
 # Check if image has updates
 check_image_updates() {
     print_info "Checking for image updates..."
-    
+
     # Get current running container's image digest if container exists
     local current_container_digest=""
     local full_image_name="${IMAGE_NAME}:${IMAGE_TAG}"
-    
+
     if docker ps -a --format "table {{.Names}}" | grep -q "^${CONTAINER_NAME}$"; then
         # Get the image digest that the current container is using
         local container_image=$(docker inspect --format='{{.Config.Image}}' "${CONTAINER_NAME}" 2>/dev/null)
@@ -181,7 +181,7 @@ check_image_updates() {
             fi
         fi
     fi
-    
+
     # Pull latest image to check for updates
     print_info "Pulling Docker Console image (${IMAGE_TAG})..."
     if docker pull "${full_image_name}" > /dev/null 2>&1; then
@@ -190,11 +190,11 @@ check_image_updates() {
         print_error "Image pull failed"
         exit 1
     fi
-    
+
     # Get newly pulled image digest
     local new_image_digest=$(docker images --digests --no-trunc --format "table {{.Repository}}:{{.Tag}}\t{{.Digest}}" | grep "^${full_image_name}" | awk '{print $2}')
     print_info "New image digest: ${new_image_digest}"
-    
+
     # Compare digests
     if [ -n "$current_container_digest" ] && [ "$current_container_digest" = "$new_image_digest" ]; then
         print_success "Container is already using the latest image (no update needed)"
@@ -213,16 +213,16 @@ check_image_updates() {
 remove_existing_container() {
     if docker ps -a --format "table {{.Names}}" | grep -q "^${CONTAINER_NAME}$"; then
         print_warning "Found existing ${CONTAINER_NAME} container."
-        
+
         # Show container info
         echo
         echo "┌────────────────────────────────────────────────────────────────────────────┐"
         echo "│                         Existing Container Details                         │"
         echo "└────────────────────────────────────────────────────────────────────────────┘"
         docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -E "(NAMES|${CONTAINER_NAME})"
-        
+
         echo
-        
+
         # Check if we need to update due to image changes
         if [ "$FORCE_UPDATE" = "true" ]; then
             print_info "Image has been updated, container restart is recommended."
@@ -242,7 +242,7 @@ remove_existing_container() {
                 exit 0
             fi
         fi
-        
+
         print_info "Removing existing ${CONTAINER_NAME} container..."
         docker stop "${CONTAINER_NAME}" &> /dev/null || true
         docker rm "${CONTAINER_NAME}" &> /dev/null || true
@@ -269,7 +269,7 @@ pull_image() {
 check_port_conflict() {
     local port_in_use=false
     local conflicting_process=""
-    
+
     # Check if port is already in use (cross-platform compatible)
     if command -v lsof &> /dev/null; then
         # Use lsof if available (works on both Mac and Linux)
@@ -284,7 +284,7 @@ check_port_conflict() {
             conflicting_process="Unknown process (use 'lsof -i :${HOST_PORT}' to identify)"
         fi
     fi
-    
+
     if [ "$port_in_use" = true ]; then
         print_warning "Port ${HOST_PORT} is already in use."
         print_info "Conflicting process: ${conflicting_process}"
@@ -299,7 +299,7 @@ check_port_conflict() {
         echo
         read_input "Please choose an option (1-3): " "-n 1 -r"
         echo
-        
+
         case $REPLY in
             1)
                 # Find a random available port
@@ -311,7 +311,7 @@ check_port_conflict() {
                         break
                     fi
                 done
-                
+
                 if [ -n "$new_port" ]; then
                     HOST_PORT=$new_port
                     print_success "Selected available port: ${HOST_PORT}"
@@ -357,10 +357,10 @@ check_port_conflict() {
 # Create and start container
 start_container() {
     print_info "Starting Docker Console container..."
-    
+
     # Check for port conflicts
     check_port_conflict
-    
+
     # Start container
     if docker run -d \
         --name "${CONTAINER_NAME}" \
@@ -381,31 +381,31 @@ wait_for_service() {
     print_info "Waiting for service to start..."
     local max_attempts=30
     local attempt=1
-    
+
     while [ $attempt -le $max_attempts ]; do
         # Try different methods to check if service is running
         if command -v curl &> /dev/null; then
             # Use curl if available
             if curl -s "http://localhost:${HOST_PORT}" > /dev/null 2>&1; then
-                echo -e "\r\033[K${GREEN}[SUCCESS]${NC} Service is running"
+                echo -e "\r\033[K${GREEN}[SUCCESS]${NC}  Service is running"
                 return 0
             fi
         elif command -v wget &> /dev/null; then
             # Use wget as fallback
             if wget -q --spider "http://localhost:${HOST_PORT}" 2>/dev/null; then
-                echo -e "\r\033[K${GREEN}[SUCCESS]${NC} Service is running"
+                echo -e "\r\033[K${GREEN}[SUCCESS]${NC}  Service is running"
                 return 0
             fi
         else
             # Use nc (netcat) as last resort if available
             if command -v nc &> /dev/null; then
                 if nc -z localhost "${HOST_PORT}" 2>/dev/null; then
-                    echo -e "\r\033[K${GREEN}[SUCCESS]${NC} Service is running"
+                    echo -e "\r\033[K${GREEN}[SUCCESS]${NC}  Service is running"
                     return 0
                 fi
             else
                 # Skip service check if no tools available
-                echo -e "\r\033[K${YELLOW}[WARNING]${NC} No tools available to check service status (curl, wget, or nc)"
+                echo -e "\r\033[K${YELLOW}[WARNING]${NC}  No tools available to check service status (curl, wget, or nc)"
                 print_info "Please manually verify the service at http://localhost:${HOST_PORT}"
                 return 0
             fi
@@ -414,7 +414,7 @@ wait_for_service() {
         sleep 2
         ((attempt++))
     done
-    
+
     echo
     print_warning "Service startup check timed out, but container is running"
     print_info "You can manually check service status: docker logs ${CONTAINER_NAME}"
@@ -450,7 +450,7 @@ show_completion_info() {
 # Main function
 main() {
     show_banner
-    
+
     # Parse command line arguments
     while [[ $# -gt 0 ]]; do
         case $1 in
@@ -494,7 +494,7 @@ main() {
                 ;;
         esac
     done
-    
+
     echo "┌────────────────────────────────────────────────────────────────────────────┐"
     echo "│                          Installation Configuration                        │"
     echo "├────────────────────────────────────────────────────────────────────────────┤"
@@ -506,10 +506,10 @@ main() {
     printf "│ %-32s : %-39s │\n" "Container config directory" "/docker-console"
     echo "└────────────────────────────────────────────────────────────────────────────┘"
     echo
-    
+
     # Execute installation steps
     check_docker
-    
+
     # Check for image updates first
     if check_image_updates; then
         # Image has updates or no existing container, need to handle existing container
@@ -544,11 +544,11 @@ main() {
         fi
         SKIP_IMAGE_CHECK="true"  # Skip pulling since image is up to date
     fi
-    
+
     start_container
     wait_for_service
     show_completion_info
 }
 
 # Run main function
-main "$@" 
+main "$@"

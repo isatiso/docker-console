@@ -1,6 +1,6 @@
 import { SelectionModel } from '@angular/cdk/collections'
-import { DatePipe } from '@angular/common'
-import { HttpClient } from '@angular/common/http'
+import { DatePipe, PercentPipe } from '@angular/common'
+import { HttpClient, HttpEventType } from '@angular/common/http'
 import { Component } from '@angular/core'
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop'
 import { MatIconButton, MatMiniFabButton } from '@angular/material/button'
@@ -9,19 +9,21 @@ import { MatDivider } from '@angular/material/divider'
 import { MatIcon } from '@angular/material/icon'
 import { MatTableModule } from '@angular/material/table'
 import { MatTooltip } from '@angular/material/tooltip'
-import { ActivatedRoute, Router, RouterLink } from '@angular/router'
+import { ActivatedRoute } from '@angular/router'
 import { FileDesc } from '@docker-console/common'
-import { filter, map, of, Subject, switchMap, tap, throttleTime } from 'rxjs'
+import JSZip from 'jszip'
+import { filter, finalize, map, mergeMap, of, Subject, switchMap, tap, throttleTime } from 'rxjs'
+import { BreadcrumbsComponent } from '../../layout/breadcrumbs/breadcrumbs.component'
+import { BreadcrumbsService } from '../../layout/breadcrumbs/breadcrumbs.service'
 import { BytesPipe } from '../../pipes/bytes.pipe'
 import { PopupService } from '../../popup/popup.service'
-import { ToolsService } from '../../services/tools.service'
+import { FileWithPath, UploadZoneDirective } from './upload-zone.directive'
 
 @Component({
     selector: 'ndc-files',
     imports: [
         MatDivider,
         DatePipe,
-        RouterLink,
         MatIcon,
         MatMiniFabButton,
         MatTooltip,
@@ -29,19 +31,23 @@ import { ToolsService } from '../../services/tools.service'
         MatIconButton,
         BytesPipe,
         MatCheckbox,
+        BreadcrumbsComponent,
+        UploadZoneDirective,
+        PercentPipe,
     ],
     templateUrl: './files.component.html',
     styleUrl: './files.component.scss'
 })
 export class FilesComponent {
 
-    current_dir = '/'
-    dir_arr: { name: string, path: string }[] = []
-    files: FileDesc[] = []
+    upload_status: 'compressing' | 'uploading' | '' = ''
+    compressing_percent = 0
+    uploading_size = 0
 
+    files: FileDesc[] = []
     selection = new SelectionModel<FileDesc>(true, [])
 
-    list_files$ = new Subject<string>()
+    list_files$ = new Subject<void>()
     rename_file$ = new Subject<string>()
     copy$ = new Subject<string>()
     remove_file$ = new Subject<string>()
@@ -50,25 +56,58 @@ export class FilesComponent {
     create_dir$ = new Subject<void>()
     download_dir$ = new Subject<string>()
     download_file$ = new Subject<string>()
+    upload_files$ = new Subject<FileWithPath[]>()
 
     constructor(
         private _http: HttpClient,
-        private _router: Router,
-        private _tools: ToolsService,
         private _route: ActivatedRoute,
         private popup: PopupService,
+        public bread: BreadcrumbsService,
     ) {
+        this.upload_files$.pipe(
+            mergeMap(files => of(null).pipe(
+                tap(() => this.upload_status = 'compressing'),
+                switchMap(async () => {
+                    const zip = new JSZip()
+                    for (const file_with_path of files) {
+                        zip.file(file_with_path.path, file_with_path.file)
+                    }
+                    return await zip.generateAsync({ type: 'blob' }, (metadata) => {
+                        this.compressing_percent = metadata.percent / 100
+                    })
+                }),
+                tap(zip_blob => this.uploading_size = zip_blob.size),
+                tap(() => this.upload_status = 'uploading'),
+                switchMap(zip_blob => {
+                    const current_path = [...this.bread.segments.map(d => d.name)].join('/')
+                    return this._http.post(`/ndc_api/file/upload/${current_path}`, zip_blob, {
+                        headers: { 'Content-Type': 'application/zip' },
+                        reportProgress: true,
+                        observe: 'events'
+                    })
+                }),
+                tap(evt => {
+                    if (evt.type === HttpEventType.UploadProgress && evt.total) {
+                        const pct = Math.round(100 * evt.loaded / evt.total)
+                        console.log('upload progress', pct, '%')
+                    } else if (evt.type === HttpEventType.Response) {
+                        this.list_files$.next()
+                        console.log('upload completed')
+                    }
+                }),
+                finalize(() => this.upload_status = ''),
+            )),
+        ).subscribe()
         this.download_file$.pipe(
             throttleTime(800),
             switchMap(filename => of(null).pipe(
-                switchMap(() => this._http.post('/ndc_api/file/read', {}, { params: { dir: this.current_dir, filename }, responseType: 'blob' })),
-                tap(blob => {
-                    const url = window.URL.createObjectURL(blob)
+                tap(() => {
+                    const filepath = [...this.bread.segments.map(d => d.name), filename].join('/')
+                    const url = `/ndc_api/file/content/${filepath}`
                     const a = document.createElement('a')
                     a.href = url
                     a.download = filename
                     a.click()
-                    window.URL.revokeObjectURL(url)
                 }),
             )),
             takeUntilDestroyed(),
@@ -76,20 +115,21 @@ export class FilesComponent {
         this.download_dir$.pipe(
             throttleTime(800),
             switchMap(filename => of(null).pipe(
-                switchMap(() => this._http.post('/ndc_api/file/zip', {}, { params: { dir: this.current_dir + '/' + filename }, responseType: 'blob' })),
-                tap(blob => {
-                    const url = window.URL.createObjectURL(blob)
+                tap(() => {
+                    const filepath = [...this.bread.segments.map(d => d.name), filename].join('/')
+                    const url = `/ndc_api/file/zip/${filepath}`
                     const a = document.createElement('a')
                     a.href = url
                     a.download = filename + '.zip'
                     a.click()
-                    window.URL.revokeObjectURL(url)
                 }),
             )),
             takeUntilDestroyed(),
         ).subscribe()
         this.list_files$.pipe(
-            switchMap(dir => this._http.post<{ data: { files: FileDesc[] } }>('/ndc_api/file/ls', { dir })),
+            throttleTime(300, undefined, { leading: true, trailing: true }),
+            map(() => [...this.bread.segments.map(d => d.name)].join('/')),
+            switchMap(dir => this._http.get<{ data: { files: FileDesc[] } }>(`/ndc_api/file/ls/${dir}`, {})),
             map(res => res.data.files),
             map(files => files.sort((a, b) => a.type.localeCompare(b.type) || a.name.localeCompare(b.name))),
             tap(files => this.files = files),
@@ -106,8 +146,8 @@ export class FilesComponent {
                 pass: filename
             })),
             filter(value => !!value),
-            switchMap(filename => this._http.post<{ data: null }>('/ndc_api/file/rm', { dir: this.current_dir, filename })),
-            tap(() => this.list_files$.next(this.current_dir)),
+            switchMap(filename => this._http.post<{ data: null }>(`/ndc_api/file/rm/${this.bread.file(filename)}`, '')),
+            tap(() => this.list_files$.next()),
             takeUntilDestroyed(),
         ).subscribe()
         this.remove_dir$.pipe(
@@ -120,76 +160,68 @@ export class FilesComponent {
                 pass: dirname
             })),
             filter(value => !!value),
-            switchMap(dirname => this._http.post<{ data: null }>('/ndc_api/file/rmdir', { dir: this.current_dir, dirname })),
-            tap(() => this.list_files$.next(this.current_dir)),
+            switchMap(dirname => this._http.post<{ data: null }>(`/ndc_api/file/rm/${this.bread.file(dirname)}`, '')),
+            tap(() => this.list_files$.next()),
             takeUntilDestroyed(),
         ).subscribe()
         this.copy$.pipe(
             switchMap(filename => this.popup.input({ title: `Copy: ${filename}`, label: 'Filename', value: filename }).pipe(
                 filter(value => value && value !== filename),
                 switchMap(value => this._http.post<{ data: null }>('/ndc_api/file/cp', {
-                    dir: this.current_dir,
-                    filename: filename,
-                    target: value
+                    pre: `${this.bread.file(filename)}`,
+                    cur: `${this.bread.file(value)}`
                 })),
             )),
-            tap(() => this.list_files$.next(this.current_dir)),
+            tap(() => this.list_files$.next()),
             takeUntilDestroyed(),
         ).subscribe()
         this.rename_file$.pipe(
             switchMap(filename => this.popup.input({ title: `Rename File: ${filename}`, label: 'Filename', value: filename }).pipe(
                 filter(value => value && value !== filename),
                 switchMap(value => this._http.post<{ data: null }>('/ndc_api/file/rename', {
-                    dir: this.current_dir,
-                    filename: filename,
-                    new_name: value
+                    pre: `${this.bread.file(filename)}`,
+                    cur: `${this.bread.file(value)}`
                 })),
             )),
-            tap(() => this.list_files$.next(this.current_dir)),
+            tap(() => this.list_files$.next()),
             takeUntilDestroyed(),
         ).subscribe()
         this.create_file$.pipe(
             switchMap(() => this.popup.input({ title: `Create File`, label: 'Filename', value: '' }).pipe(
                 filter(value => !!value),
-                switchMap(value => this._http.post<{ data: null }>('/ndc_api/file/write_text', {
-                    dir: this.current_dir,
-                    filename: value,
-                    content: ''
-                })),
+                switchMap(value => this._http.post<{ data: null }>(`/ndc_api/file/write/${this.bread.file(value)}`, '')),
             )),
-            tap(() => this.list_files$.next(this.current_dir)),
+            tap(() => this.list_files$.next()),
             takeUntilDestroyed(),
         ).subscribe()
         this.create_dir$.pipe(
             switchMap(() => this.popup.input({ title: `Create Directory`, label: 'Dirname', value: '' }).pipe(
                 filter(value => !!value),
-                switchMap(value => this._http.post<{ data: null }>('/ndc_api/file/mkdir', {
-                    dir: this.current_dir,
-                    name: value
-                })),
+                switchMap(value => this._http.post<{ data: null }>(`/ndc_api/file/mkdir/${this.bread.file(value)}`, '')),
             )),
-            tap(() => this.list_files$.next(this.current_dir)),
+            tap(() => this.list_files$.next()),
             takeUntilDestroyed(),
         ).subscribe()
-        this._route.params.pipe(
-            tap(params => {
-                this.current_dir = params['dir'] ? this._tools.base64_decode(params['dir']) : '/'
-                const dir_arr = this.current_dir.split('/').filter(Boolean)
-                this.dir_arr = dir_arr.map((_, i) => ({ name: dir_arr[i], path: '/' + dir_arr.slice(0, i + 1).join('/') }))
-            }),
-            tap(() => this.list_files$.next(this.current_dir)),
+        this._route.url.pipe(
+            tap(url => this.bread.update(url)),
+            tap(() => this.list_files$.next()),
             takeUntilDestroyed(),
         ).subscribe()
+
     }
 
-    isAllSelected() {
-        const numSelected = this.selection.selected.length
-        const numRows = this.files.length
-        return numSelected === numRows
+    upload(files: FileWithPath[]) {
+        this.upload_files$.next(files)
     }
 
-    toggleAllRows() {
-        if (this.isAllSelected()) {
+    is_all_selected() {
+        const num_selected = this.selection.selected.length
+        const num_rows = this.files.length
+        return num_selected === num_rows
+    }
+
+    toggle_all_rows() {
+        if (this.is_all_selected()) {
             this.selection.clear()
             return
         }
@@ -199,13 +231,5 @@ export class FilesComponent {
 
     $cast(value: any) {
         return value as FileDesc
-    }
-
-    navigate(name: string) {
-        this._router.navigate(['/files', this._tools.base64_encode(name)]).then()
-    }
-
-    go_edit(name: string) {
-        this._router.navigate(['/files-edit', this._tools.base64_encode(name)]).then()
     }
 }

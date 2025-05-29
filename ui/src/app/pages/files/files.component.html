@@ -1,17 +1,5 @@
 <div class="h-16 flex items-center justify-start gap-3 px-4">
-    <div class="flex items-baseline justify-start gap-3">
-        <span class="text-2xl">Files</span>
-        <div class="file-link text-base" routerLink="/files">root</div>
-        @for (p of dir_arr; track $index) {
-            @if ($last) {
-                <span>/</span>
-                <span>{{ p.name }}</span>
-            } @else {
-                <span>/</span>
-                <span class="file-link text-base" (click)="navigate(p.path + '/')">{{ p.name }}</span>
-            }
-        }
-    </div>
+    <ndc-breadcrumbs/>
     <div class="flex items-center justify-end gap-3 ml-auto">
         <button (click)="create_file$.next()" color="primary" mat-mini-fab matTooltip="Create new file">
             <mat-icon class="material-symbols-rounded">note_add</mat-icon>
@@ -26,14 +14,27 @@
 <mat-divider></mat-divider>
 <mat-divider></mat-divider>
 
-<div class="overflow-y-auto" style="height: calc(100% - 4rem - 3px)">
+<div class="overflow-y-auto relative" style="height: calc(100% - 4rem - 3px)" uploadZone (upload)="upload($event)">
+    @if (upload_status) {
+        <div class="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black/50" style="z-index: 999">
+            <div class="flex flex-col items-center justify-center gap-2">
+                <mat-icon class="animate-spin material-symbols-rounded">progress_activity</mat-icon>
+                @if (upload_status === 'compressing') {
+                    <div class="text-base">Compressing files...{{ compressing_percent | percent }}</div>
+                } @else if (upload_status === 'uploading') {
+                    <div class="text-base">Uploading files...</div>
+                }
+                <div class="text-base">Please do not close or refresh the page before the upload is complete.</div>
+            </div>
+        </div>
+    }
     <table [dataSource]="files" mat-table>
 
         <ng-container matColumnDef="select">
             <th *matHeaderCellDef mat-header-cell>
-                <mat-checkbox (change)="$event ? toggleAllRows() : null"
-                              [checked]="selection.hasValue() && isAllSelected()"
-                              [indeterminate]="selection.hasValue() && !isAllSelected()">
+                <mat-checkbox (change)="$event ? toggle_all_rows() : null"
+                              [checked]="selection.hasValue() && is_all_selected()"
+                              [indeterminate]="selection.hasValue() && !is_all_selected()">
                 </mat-checkbox>
             </th>
             <td *matCellDef="let row" mat-cell>
@@ -51,16 +52,16 @@
                     @let el = $cast(element);
                     @if (el.type === 'directory') {
                         <mat-icon class="text-green-500 material-symbols-rounded">folder</mat-icon>
-                        <a class="directory-link" (click)="navigate(current_dir + el.name + '/')">{{ el.name }}</a>
+                        <a class="directory-link" (click)="bread.step_in(el.name)">{{ el.name }}</a>
                     } @else if (el.type === 'file') {
                         <mat-icon class="text-yellow-500 material-symbols-rounded">draft</mat-icon>
-                        <a class="file-link" (click)="go_edit(current_dir + el.name)">{{ el.name }}</a>
+                        <a class="file-link" (click)="bread.go_edit(el.name)">{{ el.name }}</a>
                     } @else if (el.type === 'link') {
                         <mat-icon class="text-red-500 material-symbols-rounded">draft</mat-icon>
                         {{ el.name }}
                     } @else {
                         <mat-icon class="text-orange-500 material-symbols-rounded">draft</mat-icon>
-                        <a class="file-link" (click)="navigate(el.name)">{{ el.name }}</a>
+                        <a class="file-link" (click)="bread.go_edit(el.name)">{{ el.name }}</a>
                     }
                     @if (el.link) {
                         <mat-icon class="text-gray-500 material-symbols-rounded">arrow_right_alt</mat-icon>

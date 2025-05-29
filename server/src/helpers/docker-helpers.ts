@@ -225,7 +225,7 @@ export function parse_expose(expose: (string | number)[]): Record<string, {}> {
             if (matches) {
                 const start = +matches[1]
                 const end = +(matches[2] ?? matches[1])
-                const protocol = matches[3] || 'tcp' // 默认协议为 tcp
+                const protocol = matches[3] || 'tcp' // default protocol is tcp
                 for (let p = start; p <= end; p++) {
                     exposed_ports[`${p}/${protocol}`] = {}
                 }

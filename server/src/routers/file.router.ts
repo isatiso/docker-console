@@ -1,17 +1,19 @@
-import { DockerDef, FileDesc, NdcResponse } from '@docker-console/common'
-import { HttpFileManager, JsonBody, Params, Post, RawBody, throw_bad_request, TpRouter } from '@tarpit/http'
+import { NdcResponse } from '@docker-console/common'
+import { FileDesc, FileType, Get, HttpFileManager, JsonBody, PathArgs, Post, throw_not_found, TpRequest, TpResponse, TpRouter } from '@tarpit/http'
 import { Jtl } from '@tarpit/judge'
+import { randomUUID } from 'node:crypto'
+import fs from 'node:fs'
+import fsp from 'node:fs/promises'
 import path from 'node:path'
-import stream from 'node:stream'
+import { pipeline } from 'node:stream/promises'
+import * as unzipper from 'unzipper'
 import package_json from '../pkg.json'
-import { NdcProjectService } from '../services/project.service'
 
 @TpRouter('/ndc_api/file')
 export class FileRouter {
 
     constructor(
         private file: HttpFileManager,
-        private project: NdcProjectService,
     ) {
     }
 
@@ -20,183 +22,180 @@ export class FileRouter {
         return { status: 'success', data: { version: package_json.version } }
     }
 
-    @Post()
-    async projects(body: JsonBody<{
-        reload?: boolean
-    }>): Promise<NdcResponse<Record<string, DockerDef.DefinitionStat>>> {
-        const reload = body.get_if('reload', Jtl.boolean, false)
-        if (reload) {
-            await this.project.load()
+    @Get('ls/:filepath*')
+    async ls(args: PathArgs<{ filepath: string[] }>): Promise<NdcResponse<{ files: FileDesc[] }>> {
+        const filepath = (args.get('filepath') ?? []).map(p => decodeURIComponent(p))
+        const resolved_path = path.join('data', ...filepath)
+        if (!await this.file.exists(resolved_path)) {
+            return throw_not_found()
         }
-        return { status: 'success', data: this.project.projects }
-    }
-
-    @Post()
-    async ls(body: JsonBody<{
-        category?: string
-        dir?: string
-    }>): Promise<NdcResponse<{ files: FileDesc[] }>> {
-        const cat = body.get_if('category', /data|projects/, 'data')
-        const dir = body.get_if('dir', Jtl.non_empty_string, '/')
-        const files = await this.file.ls(path.join(cat, dir))
+        const files = await this.file.ls(resolved_path)
         return { status: 'success', data: { files } }
     }
 
-    @Post()
-    async mkdir(body: JsonBody<{
-        category?: string
-        dir?: string
-        name: string
-    }>): Promise<NdcResponse<null>> {
-        const cat = body.get_if('category', /data|projects/, 'data')
-        const dir = body.get_if('dir', Jtl.non_empty_string, '/')
-        const name = body.ensure('name', Jtl.non_empty_string)
-        await this.file.mkdir(path.join(cat, dir, name))
+    @Get('lstat/:filepath*')
+    async lstat(args: PathArgs<{ filepath: string[] }>) {
+        const filepath = (args.get('filepath') ?? []).map(p => decodeURIComponent(p))
+        const resolved_path = path.join('data', ...filepath)
+        if (!await this.file.exists(resolved_path)) {
+            return throw_not_found()
+        }
+        const stats = await this.file.lstat(resolved_path)
+        return { status: 'success', data: { stats, type: this.extract_type(stats) } }
+    }
+
+    @Get('zip/:filepath+')
+    async zip(args: PathArgs<{ filepath: string[] }>): Promise<ReadableStream> {
+        const filepath = args.ensure('filepath', Jtl.array_of(Jtl.non_empty_string))
+            .map(p => decodeURIComponent(p))
+        const resolved_path = path.join('data', ...filepath)
+        if (!await this.file.exists(resolved_path)) {
+            throw_not_found()
+        }
+        return this.file.zip(resolved_path)
+    }
+
+    @Get('content/:filepath+')
+    async content(args: PathArgs<{ filepath: string[] }>, resp: TpResponse): Promise<ReadableStream> {
+        const filepath = args.ensure('filepath', Jtl.array_of(Jtl.non_empty_string))
+            .map(p => decodeURIComponent(p))
+        const resolved_path = path.join('data', ...filepath)
+        if (!await this.file.exists(resolved_path)) {
+            throw_not_found()
+        }
+        const stat = await this.file.lstat(resolved_path)
+        resp.set('Content-Length', stat.size)
+        return this.file.read_stream(resolved_path)
+    }
+
+    @Post('upload/:filepath*')
+    async upload(args: PathArgs<{ filepath: string[] }>, request: TpRequest): Promise<NdcResponse<null>> {
+        const filepath = (args.get('filepath') ?? []).map(p => decodeURIComponent(p))
+        const resolved_path = path.join('data', ...filepath)
+
+        if (!await this.file.exists(resolved_path)) {
+            await this.file.mkdir(resolved_path)
+        }
+
+        const temp_zip_path = `tmp/${randomUUID()}.zip`
+        try {
+            await this.file.write_stream(temp_zip_path, request.req)
+
+            const data_path = this.file.data_path
+            const zip_path = path.join(data_path, temp_zip_path)
+            const target_dir = path.join(data_path, resolved_path)
+            const directory = await unzipper.Open.file(zip_path)
+            await Promise.allSettled(directory.files.map(async file => {
+                const normalized_path = path.normalize(file.path)
+                const target_path = path.join(target_dir, normalized_path)
+
+                if (!target_path.startsWith(target_dir + path.sep)) {
+                    return
+                }
+
+                if (file.type === 'Directory') {
+                    await fsp.mkdir(target_path, { recursive: true })
+                } else {
+                    await fsp.mkdir(path.dirname(target_path), { recursive: true })
+                    await pipeline(file.stream(), fs.createWriteStream(target_path))
+                }
+            }))
+
+            await this.file.rm(temp_zip_path)
+        } catch (err: any) {
+            await this.file.rm(temp_zip_path).catch(() => void 0)
+            return { status: 'error', code: err.code || 500, message: err.message }
+        }
+
         return { status: 'success', data: null }
     }
 
-    @Post()
-    async rmdir(body: JsonBody<{
-        category?: string
-        dir?: string
-        dirname: string
-    }>): Promise<NdcResponse<null>> {
-        const cat = body.get_if('category', /data|projects/, 'data')
-        const dir = body.get_if('dir', Jtl.non_empty_string, '/')
-        const dirname = body.ensure('dirname', Jtl.non_empty_string)
-        await this.file.rm(path.join(cat, dir, dirname))
-        return { status: 'success', data: null }
-    }
-
-    @Post()
-    async zip(params: Params<{
-        category?: string
-        dir?: string
-    }>): Promise<stream.Stream> {
-        const cat = params.get_first('category') || 'data'
-        const dir = params.get_first('dir') || '/'
-        if (cat !== 'projects' && cat !== 'data') {
-            throw_bad_request('category must be data or projects')
-        }
-        return this.file.zip(path.join(cat, dir))
-    }
-
-    @Post()
-    async read(params: Params<{
-        category?: string
-        dir?: string
-        filename: string
-    }>): Promise<Buffer> {
-        const filename = params.ensure('filename', Jtl.non_empty_string)
-        const cat = params.get_first('category') || 'data'
-        const dir = params.get_first('dir') || '/'
-        if (cat !== 'projects' && cat !== 'data') {
-            throw_bad_request('category must be data or projects')
-        }
-        return this.file.read(path.join(cat, dir, filename))
-    }
-
-    @Post()
-    async read_text(body: JsonBody<{
-        category?: string
-        dir?: string
-        filename: string
-    }>): Promise<NdcResponse<{ content: string }>> {
-        const cat = body.get_if('category', /data|projects/, 'data')
-        const dir = body.get_if('dir', Jtl.non_empty_string, '/')
-        const filename = body.ensure('filename', Jtl.non_empty_string)
-        const content = await this.file.read(path.join(cat, dir, filename))
-        return { status: 'success', data: { content: content.toString('utf8') } }
-    }
-
-    @Post()
-    async write(params: Params<{
-        category?: string
-        dir?: string
-        filename: string
-    }>, content: RawBody): Promise<NdcResponse<null>> {
-        const cat = params.get_first('category') || 'data'
-        const dir = params.get_first('dir') || '/'
-        const filename = params.ensure('filename', Jtl.non_empty_string)
-        if (cat !== 'projects' && cat !== 'data') {
-            throw_bad_request('category must be data or projects')
-        }
-        await this.file.write(path.join(cat, dir, filename), content)
-        if (cat === 'projects') {
-            await this.project.load(filename.replace(`.project.yml`, ''))
+    @Post('write/:filepath+')
+    async write(args: PathArgs<{ filepath: string[] }>, request: TpRequest): Promise<NdcResponse<null>> {
+        const filepath = args.ensure('filepath', Jtl.array_of(Jtl.non_empty_string))
+            .map(p => decodeURIComponent(p))
+        const resolved_path = path.join('data', ...filepath)
+        const temp_relative_path = `tmp/${randomUUID()}.tmp`
+        try {
+            await this.file.write_stream(temp_relative_path, request.req)
+            await this.file.rename(temp_relative_path, resolved_path)
+        } catch (err: any) {
+            await this.file.rm(temp_relative_path).catch(err => err)
+            return { status: 'error', code: err.code, message: err.message }
         }
         return { status: 'success', data: null }
     }
 
-    @Post()
-    async write_text(body: JsonBody<{
-        category?: string
-        dir?: string
-        filename: string
-        content: string
-    }>): Promise<NdcResponse<null>> {
-        const cat = body.get_if('category', /data|projects/, 'data') as 'projects' | 'data'
-        const dir = body.get_if('dir', Jtl.non_empty_string, '/')
-        const filename = body.ensure('filename', Jtl.non_empty_string)
-        const content = body.ensure('content', Jtl.string)
-        await this.file.write(path.join(cat, dir, filename), Buffer.from(content, 'utf8'))
-        if (cat === 'projects') {
-            await this.project.load(filename.replace(`.project.yml`, ''))
-        }
+    @Post('mkdir/:filepath+')
+    async mkdir(args: PathArgs<{ filepath: string[] }>): Promise<NdcResponse<null>> {
+        const filepath = args.ensure('filepath', Jtl.array_of(Jtl.non_empty_string))
+            .map(p => decodeURIComponent(p))
+        const resolved_path = path.join('data', ...filepath)
+        await this.file.mkdir(resolved_path)
+        return { status: 'success', data: null }
+    }
+
+    @Post('rm/:filepath+')
+    async rm(args: PathArgs<{ filepath: string[] }>): Promise<NdcResponse<null>> {
+        const filepath = args.ensure('filepath', Jtl.array_of(Jtl.non_empty_string))
+            .map(p => decodeURIComponent(p))
+        const resolved_path = path.join('data', ...filepath)
+        await this.file.rm(resolved_path)
         return { status: 'success', data: null }
     }
 
     @Post()
     async rename(body: JsonBody<{
-        category?: string
-        dir?: string
-        filename: string
-        new_name: string
+        pre: string
+        cur: string
     }>): Promise<NdcResponse<null>> {
-        const cat = body.get_if('category', /data|projects/, 'data') as 'projects' | 'data'
-        const dir = body.get_if('dir', Jtl.non_empty_string, '/')
-        const filename = body.ensure('filename', Jtl.non_empty_string)
-        const new_name = body.ensure('new_name', Jtl.non_empty_string)
-        await this.file.rename(path.join(cat, dir, filename), path.join(cat, dir, new_name))
-        if (cat === 'projects') {
-            await this.project.load(filename.replace(`.project.yml`, ''))
-            await this.project.load(new_name.replace(`.project.yml`, ''))
+        const pre = body.ensure('pre', Jtl.non_empty_string)
+        const cur = body.ensure('cur', Jtl.non_empty_string)
+        const resolved_pre = path.join('data', ...pre.split('/').filter(Boolean))
+        if (!await this.file.exists(resolved_pre)) {
+            throw_not_found()
         }
+        await this.file.rename(resolved_pre, path.join('data', ...cur.split('/').filter(Boolean)))
         return { status: 'success', data: null }
     }
 
     @Post()
     async cp(body: JsonBody<{
-        category?: string
-        dir?: string
-        filename: string
-        target: string
+        pre: string
+        cur: string
     }>): Promise<NdcResponse<null>> {
-        const cat = body.get_if('category', /data|projects/, 'data') as 'projects' | 'data'
-        const dir = body.get_if('dir', Jtl.non_empty_string, '/')
-        const filename = body.ensure('filename', Jtl.non_empty_string)
-        const target = body.ensure('target', Jtl.non_empty_string)
-        await this.file.cp(path.join(cat, dir, filename), path.join(cat, dir, target))
-        if (cat === 'projects') {
-            await this.project.load(filename.replace(`.project.yml`, ''))
-            await this.project.load(target.replace(`.project.yml`, ''))
+        const pre = body.ensure('pre', Jtl.non_empty_string)
+        const cur = body.ensure('cur', Jtl.non_empty_string)
+        const resolved_pre = path.join('data', ...pre.split('/').filter(Boolean))
+        if (!await this.file.exists(resolved_pre)) {
+            throw_not_found()
         }
+        await this.file.cp(resolved_pre, path.join('data', ...cur.split('/').filter(Boolean)))
         return { status: 'success', data: null }
     }
 
-    @Post()
-    async rm(body: JsonBody<{
-        category?: string
-        dir?: string
-        filename: string
-    }>): Promise<NdcResponse<null>> {
-        const cat = body.get_if('category', /data|projects/, 'data') as 'projects' | 'data'
-        const dir = body.get_if('dir', Jtl.non_empty_string, '/')
-        const filename = body.ensure('filename', Jtl.non_empty_string)
-        await this.file.rm(path.join(cat, dir, filename))
-        if (cat === 'projects') {
-            await this.project.load(filename.replace(`.project.yml`, ''))
+    private extract_type(d: fs.Dirent | fs.Stats): FileType {
+        if (d.isFile()) {
+            return 'file'
         }
-        return { status: 'success', data: null }
+        if (d.isDirectory()) {
+            return 'directory'
+        }
+        if (d.isBlockDevice()) {
+            return 'block'
+        }
+        if (d.isCharacterDevice()) {
+            return 'character'
+        }
+        if (d.isSymbolicLink()) {
+            return 'link'
+        }
+        if (d.isFIFO()) {
+            return 'fifo'
+        }
+        if (d.isSocket()) {
+            return 'socket'
+        }
+        return 'unknown'
     }
 }

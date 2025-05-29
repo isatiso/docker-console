@@ -313,7 +313,7 @@ export class DockerService {
         const pack = tar.c({ gzip: false, cwd: cwd }, [target_path]).pipe(stream)
         const chunks: Buffer[] = []
         pack.on('data', (chunk) => chunks.push(chunk))
-        await finished(pack) // 等待流完成
+        await finished(pack) // wait for stream to complete
         const content = Buffer.concat(chunks)
         return this._axios.put(`/containers/${id}/archive`, content, {
             params,

@@ -5,11 +5,13 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop'
 import { FormsModule } from '@angular/forms'
 import { MatButton } from '@angular/material/button'
 import { MatDivider } from '@angular/material/divider'
-import { ActivatedRoute, Router, RouterLink } from '@angular/router'
+import { MatIcon } from '@angular/material/icon'
+import { ActivatedRoute, Router } from '@angular/router'
 import type * as monaco from 'monaco-editor'
-import { filter, Subject, switchMap, tap } from 'rxjs'
+import { Subject, switchMap, tap } from 'rxjs'
+import { BreadcrumbsComponent } from '../../layout/breadcrumbs/breadcrumbs.component'
+import { BreadcrumbsService } from '../../layout/breadcrumbs/breadcrumbs.service'
 import { MonacoEditorComponent } from '../../monaco/monaco-editor.component'
-import { ToolsService } from '../../services/tools.service'
 import { VersionService } from '../../services/version.service'
 
 @Component({
@@ -19,7 +21,8 @@ import { VersionService } from '../../services/version.service'
         MatDivider,
         MonacoEditorComponent,
         FormsModule,
-        RouterLink
+        MatIcon,
+        BreadcrumbsComponent
     ],
     templateUrl: './file-editor.component.html',
     styleUrl: './file-editor.component.scss'
@@ -27,42 +30,28 @@ import { VersionService } from '../../services/version.service'
 export class FileEditorComponent implements OnInit, OnDestroy {
 
     @ViewChild('version_editor', { static: true }) _editor?: MonacoEditorComponent
-    dir_arr: { name: string, path: string }[] = []
-    dir = ''
-    filename = ''
+
     content = ''
     edited_content = ''
     get_file_content$ = new Subject<void>()
-    lang = ''
     options: monaco.editor.IStandaloneEditorConstructionOptions = { language: 'json' }
+    downloading = false
 
     constructor(
         private _http: HttpClient,
-        private _location: Location,
-        private _router: Router,
-        private _tools: ToolsService,
         public versions: VersionService,
+        public bread: BreadcrumbsService,
         private route: ActivatedRoute,
     ) {
         this.get_file_content$.pipe(
-            switchMap(() => this._http.post<{ data: { content: string } }>('/ndc_api/file/read_text', { dir: this.dir, filename: this.filename })),
-            tap(res => {
-                this.content = res.data.content
-                this.edited_content = this.content
-                console.log(this.content)
-            }),
+            tap(() => this.downloading = true),
+            switchMap(() => this._http.get(`/ndc_api/file/content/${this.bread.current}`, { responseType: 'text' })),
+            tap(res => this.edited_content = this.content = res),
+            tap(() => this.downloading = false),
             takeUntilDestroyed(),
         ).subscribe()
-        this.route.params.pipe(
-            tap(params => {
-                const location = this._tools.base64_decode(params['location']).split('/').filter(Boolean)
-                this.filename = location.slice(-1)[0]
-                this.lang = this.filename.split('.').slice(-1)[0]
-                this.dir = location.slice(0, -1).join('/') || '/'
-                const dir_arr = location.slice(0, -1)
-                this.dir_arr = dir_arr.map((_, i) => ({ name: dir_arr[i], path: '/' + dir_arr.slice(0, i + 1).join('/') }))
-            }),
-            filter(() => !!this.dir && !!this.filename),
+        this.route.url.pipe(
+            tap(url => this.bread.update(url)),
             tap(() => this.get_file_content$.next()),
             takeUntilDestroyed(),
         ).subscribe()
@@ -105,11 +94,7 @@ export class FileEditorComponent implements OnInit, OnDestroy {
     }
 
     save() {
-        this._http.post('/ndc_api/file/write_text', {
-            dir: this.dir,
-            filename: this.filename,
-            content: this.edited_content
-        }).subscribe(() => {
+        this._http.post(`/ndc_api/file/write/${this.bread.current}`, this.edited_content).subscribe(() => {
             this.content = this.edited_content
         })
     }
@@ -123,15 +108,5 @@ export class FileEditorComponent implements OnInit, OnDestroy {
     ngOnDestroy() {
         this.edited_content = ''
         this.content = ''
-        this.filename = ''
-        this.dir = ''
-    }
-
-    go_back() {
-        this._location.back()
-    }
-
-    navigate(name: string) {
-        this._router.navigate(['/files', this._tools.base64_encode(name)]).then()
     }
 }
