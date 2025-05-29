@@ -79,11 +79,11 @@ export class FileRouter {
 
         const temp_zip_path = `tmp/${randomUUID()}.zip`
         try {
-
             await this.file.write_stream(temp_zip_path, request.req)
 
-            const zip_path = path.join(this.file.data_path, temp_zip_path)
-            const target_dir = path.join(this.file.data_path, resolved_path)
+            const data_path = this.file.data_path
+            const zip_path = path.join(data_path, temp_zip_path)
+            const target_dir = path.join(data_path, resolved_path)
             const directory = await unzipper.Open.file(zip_path)
             await Promise.allSettled(directory.files.map(async file => {
                 const normalized_path = path.normalize(file.path)
@@ -172,10 +172,6 @@ export class FileRouter {
         }
         await this.file.cp(resolved_pre, path.join('data', ...cur.split('/').filter(Boolean)))
         return { status: 'success', data: null }
-    }
-
-    private async extract_zip_safely(zip_path: string, target_dir: string): Promise<void> {
-
     }
 
     private extract_type(d: fs.Dirent | fs.Stats): FileType {
