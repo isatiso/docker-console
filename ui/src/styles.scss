@@ -116,3 +116,16 @@ tr.ndc-table-row:active {
     background: var(--mat-table-background-color);
 }
 
+
+.dropzone-overlay {
+    @apply bg-blue-600/10
+    border-2 border-dashed border-blue-500
+    flex items-center justify-center;
+    pointer-events: none !important;
+
+    & * {
+        pointer-events: none;
+    }
+}
+
+

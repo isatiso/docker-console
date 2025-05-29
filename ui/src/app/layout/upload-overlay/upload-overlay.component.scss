@@ -1,0 +1,9 @@
+
+:host {
+    @apply pointer-events-none;
+}
+
+.overlay-content {
+    pointer-events: none;
+    @apply text-blue-600 dark:text-blue-300 select-none;
+}

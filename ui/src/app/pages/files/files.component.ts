@@ -1,6 +1,6 @@
 import { SelectionModel } from '@angular/cdk/collections'
-import { DatePipe } from '@angular/common'
-import { HttpClient } from '@angular/common/http'
+import { DatePipe, PercentPipe } from '@angular/common'
+import { HttpClient, HttpEventType } from '@angular/common/http'
 import { Component } from '@angular/core'
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop'
 import { MatIconButton, MatMiniFabButton } from '@angular/material/button'
@@ -11,11 +11,13 @@ import { MatTableModule } from '@angular/material/table'
 import { MatTooltip } from '@angular/material/tooltip'
 import { ActivatedRoute } from '@angular/router'
 import { FileDesc } from '@docker-console/common'
-import { filter, map, of, Subject, switchMap, tap, throttleTime } from 'rxjs'
+import JSZip from 'jszip'
+import { filter, finalize, map, mergeMap, of, Subject, switchMap, tap, throttleTime } from 'rxjs'
 import { BreadcrumbsComponent } from '../../layout/breadcrumbs/breadcrumbs.component'
 import { BreadcrumbsService } from '../../layout/breadcrumbs/breadcrumbs.service'
 import { BytesPipe } from '../../pipes/bytes.pipe'
 import { PopupService } from '../../popup/popup.service'
+import { FileWithPath, UploadZoneDirective } from './upload-zone.directive'
 
 @Component({
     selector: 'ndc-files',
@@ -30,14 +32,19 @@ import { PopupService } from '../../popup/popup.service'
         BytesPipe,
         MatCheckbox,
         BreadcrumbsComponent,
+        UploadZoneDirective,
+        PercentPipe,
     ],
     templateUrl: './files.component.html',
     styleUrl: './files.component.scss'
 })
 export class FilesComponent {
 
-    files: FileDesc[] = []
+    upload_status: 'compressing' | 'uploading' | '' = ''
+    compressing_percent = 0
+    uploading_size = 0
 
+    files: FileDesc[] = []
     selection = new SelectionModel<FileDesc>(true, [])
 
     list_files$ = new Subject<void>()
@@ -49,6 +56,7 @@ export class FilesComponent {
     create_dir$ = new Subject<void>()
     download_dir$ = new Subject<string>()
     download_file$ = new Subject<string>()
+    upload_files$ = new Subject<FileWithPath[]>()
 
     constructor(
         private _http: HttpClient,
@@ -56,6 +64,40 @@ export class FilesComponent {
         private popup: PopupService,
         public bread: BreadcrumbsService,
     ) {
+        this.upload_files$.pipe(
+            mergeMap(files => of(null).pipe(
+                tap(() => this.upload_status = 'compressing'),
+                switchMap(async () => {
+                    const zip = new JSZip()
+                    for (const file_with_path of files) {
+                        zip.file(file_with_path.path, file_with_path.file)
+                    }
+                    return await zip.generateAsync({ type: 'blob' }, (metadata) => {
+                        this.compressing_percent = metadata.percent / 100
+                    })
+                }),
+                tap(zip_blob => this.uploading_size = zip_blob.size),
+                tap(() => this.upload_status = 'uploading'),
+                switchMap(zip_blob => {
+                    const current_path = [...this.bread.segments.map(d => d.name)].join('/')
+                    return this._http.post(`/ndc_api/file/upload/${current_path}`, zip_blob, {
+                        headers: { 'Content-Type': 'application/zip' },
+                        reportProgress: true,
+                        observe: 'events'
+                    })
+                }),
+                tap(evt => {
+                    if (evt.type === HttpEventType.UploadProgress && evt.total) {
+                        const pct = Math.round(100 * evt.loaded / evt.total)
+                        console.log('upload progress', pct, '%')
+                    } else if (evt.type === HttpEventType.Response) {
+                        this.list_files$.next()
+                        console.log('upload completed')
+                    }
+                }),
+                finalize(() => this.upload_status = ''),
+            )),
+        ).subscribe()
         this.download_file$.pipe(
             throttleTime(800),
             switchMap(filename => of(null).pipe(
@@ -85,6 +127,7 @@ export class FilesComponent {
             takeUntilDestroyed(),
         ).subscribe()
         this.list_files$.pipe(
+            throttleTime(300, undefined, { leading: true, trailing: true }),
             map(() => [...this.bread.segments.map(d => d.name)].join('/')),
             switchMap(dir => this._http.get<{ data: { files: FileDesc[] } }>(`/ndc_api/file/ls/${dir}`, {})),
             map(res => res.data.files),
@@ -164,16 +207,21 @@ export class FilesComponent {
             tap(() => this.list_files$.next()),
             takeUntilDestroyed(),
         ).subscribe()
+
     }
 
-    isAllSelected() {
-        const numSelected = this.selection.selected.length
-        const numRows = this.files.length
-        return numSelected === numRows
+    upload(files: FileWithPath[]) {
+        this.upload_files$.next(files)
     }
 
-    toggleAllRows() {
-        if (this.isAllSelected()) {
+    is_all_selected() {
+        const num_selected = this.selection.selected.length
+        const num_rows = this.files.length
+        return num_selected === num_rows
+    }
+
+    toggle_all_rows() {
+        if (this.is_all_selected()) {
             this.selection.clear()
             return
         }

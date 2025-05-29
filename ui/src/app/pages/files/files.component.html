@@ -14,14 +14,27 @@
 <mat-divider></mat-divider>
 <mat-divider></mat-divider>
 
-<div class="overflow-y-auto" style="height: calc(100% - 4rem - 3px)">
+<div class="overflow-y-auto relative" style="height: calc(100% - 4rem - 3px)" uploadZone (upload)="upload($event)">
+    @if (upload_status) {
+        <div class="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black/50" style="z-index: 999">
+            <div class="flex flex-col items-center justify-center gap-2">
+                <mat-icon class="animate-spin material-symbols-rounded">progress_activity</mat-icon>
+                @if (upload_status === 'compressing') {
+                    <div class="text-base">Compressing files...{{ compressing_percent | percent }}</div>
+                } @else if (upload_status === 'uploading') {
+                    <div class="text-base">Uploading files...</div>
+                }
+                <div class="text-base">Please do not close or refresh the page before the upload is complete.</div>
+            </div>
+        </div>
+    }
     <table [dataSource]="files" mat-table>
 
         <ng-container matColumnDef="select">
             <th *matHeaderCellDef mat-header-cell>
-                <mat-checkbox (change)="$event ? toggleAllRows() : null"
-                              [checked]="selection.hasValue() && isAllSelected()"
-                              [indeterminate]="selection.hasValue() && !isAllSelected()">
+                <mat-checkbox (change)="$event ? toggle_all_rows() : null"
+                              [checked]="selection.hasValue() && is_all_selected()"
+                              [indeterminate]="selection.hasValue() && !is_all_selected()">
                 </mat-checkbox>
             </th>
             <td *matCellDef="let row" mat-cell>

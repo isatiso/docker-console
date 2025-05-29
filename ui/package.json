@@ -23,6 +23,7 @@
     "@angular/router": "^19.0.5",
     "@xterm/addon-fit": "^0.10.0",
     "@xterm/xterm": "^5.5.0",
+    "jszip": "^3.10.1",
     "monaco-editor": "^0.52.2",
     "prettier": "^3.3.3",
     "rxjs": "~7.8.2",
