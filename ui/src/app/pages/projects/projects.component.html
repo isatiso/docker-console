@@ -18,7 +18,7 @@
             <th *matHeaderCellDef mat-header-cell></th>
             <td *matCellDef="let element" mat-cell>
                 <div class="inline-flex items-center justify-start gap-2">
-                    <div><a (click)="go_edit(element.filename)" class="directory-link" matTooltip="Edit File">{{ element.filename }}</a></div>
+                    <div><a (click)="go_edit(element.filename)" class="file-link" matTooltip="Edit File">{{ element.filename }}</a></div>
                 </div>
             </td>
         </ng-container>

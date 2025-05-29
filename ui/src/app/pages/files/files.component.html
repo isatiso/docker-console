@@ -16,6 +16,10 @@
     @if (stats?.type === 'directory') {
         <ndc-file-list #child_component></ndc-file-list>
     } @else if (stats?.type === 'file') {
-        <ndc-file-editor #child_component></ndc-file-editor>
+        @if (bread.info?.is_text) {
+            <ndc-file-editor #child_component></ndc-file-editor>
+        } @else {
+            <ndc-file-viewer #child_component></ndc-file-viewer>
+        }
     }
 </div>

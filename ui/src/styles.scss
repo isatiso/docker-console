@@ -85,15 +85,6 @@ body {
     font-family: monospace;
 }
 
-.directory-link {
-
-    color: var(--primary-text-color);
-
-    &:hover {
-        cursor: pointer;
-    }
-}
-
 .file-link {
     color: var(--primary-text-color);
 

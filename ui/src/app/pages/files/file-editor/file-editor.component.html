@@ -4,7 +4,7 @@
     </div>
 }
 
-<ndc-monaco-editor #version_editor style="height: 100%" [options]="{ language: bread.lang }" [(ngModel)]="edited_content"></ndc-monaco-editor>
+<ndc-monaco-editor #version_editor style="height: 100%" [options]="options" [(ngModel)]="edited_content"></ndc-monaco-editor>
 
 <ng-template #operations>
     @if (content_changed) {

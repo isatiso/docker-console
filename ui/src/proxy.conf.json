@@ -3,6 +3,9 @@
         "target": "http://localhost:7293",
         "secure": false,
         "changeOrigin": true,
+        "pathRewrite": {
+            "^/ndc_api": "/ndc_api"
+        },
         "ws": true
     }
 }

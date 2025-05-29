@@ -33,20 +33,19 @@
         <ng-container matColumnDef="name">
             <th *matHeaderCellDef mat-header-cell></th>
             <td *matCellDef="let element" mat-cell>
-                <div class="inline-flex items-center justify-start gap-2">
+                <div class="flex items-center justify-start gap-2">
                     @let el = $cast(element);
                     @if (el.type === 'directory') {
                         <mat-icon class="text-green-500 material-symbols-rounded">folder</mat-icon>
-                        <a class="directory-link" (click)="bread.step_in(el.name)">{{ el.name }}</a>
+                        <a class="file-link" (click)="bread.step_in(el.name)">{{ el.name }}</a>
                     } @else if (el.type === 'file') {
-                        <mat-icon class="text-yellow-500 material-symbols-rounded">draft</mat-icon>
-                        <a class="file-link" (click)="bread.go_edit(el.name)">{{ el.name }}</a>
+                        <mat-icon [class]="color_of(el.name) + ' material-symbols-rounded'">{{ icon_of(el.name) }}</mat-icon>
+                        <a class="file-link" (click)="bread.step_in(el.name)">{{ el.name }}</a>
                     } @else if (el.type === 'link') {
-                        <mat-icon class="text-red-500 material-symbols-rounded">draft</mat-icon>
-                        {{ el.name }}
+                        <mat-icon class="text-red-500 material-symbols-rounded">link</mat-icon>
                     } @else {
-                        <mat-icon class="text-orange-500 material-symbols-rounded">draft</mat-icon>
-                        <a class="file-link" (click)="bread.go_edit(el.name)">{{ el.name }}</a>
+                        <mat-icon class="text-gray-500 material-symbols-rounded">unknown_document</mat-icon>
+                        {{ el.name }}
                     }
                     @if (el.link) {
                         <mat-icon class="text-gray-500 material-symbols-rounded">arrow_right_alt</mat-icon>

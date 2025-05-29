@@ -15,6 +15,7 @@ import { filter, finalize, map, mergeMap, of, Subject, switchMap, tap, throttleT
 import { BreadcrumbsService } from '../../../layout/breadcrumbs/breadcrumbs.service'
 import { BytesPipe } from '../../../pipes/bytes.pipe'
 import { PopupService } from '../../../popup/popup.service'
+import { FileTypeService } from '../../../services/file-type.service'
 import { FileWithPath, UploadZoneDirective } from '../upload-zone.directive'
 
 @Component({
@@ -67,9 +68,10 @@ export class FileListComponent {
     upload_files$ = new Subject<FileWithPath[]>()
 
     constructor(
+        private _file_type: FileTypeService,
         private _http: HttpClient,
+        private _popup: PopupService,
         public bread: BreadcrumbsService,
-        private popup: PopupService,
     ) {
         this.upload_files$.pipe(
             mergeMap(files => of(null).pipe(
@@ -144,7 +146,7 @@ export class FileListComponent {
             takeUntilDestroyed(),
         ).subscribe()
         this.remove_file$.pipe(
-            switchMap(filename => this.popup.warning({
+            switchMap(filename => this._popup.warning({
                 title: `Remove File`,
                 messages: [
                     `Remove File: ${filename}`,
@@ -158,7 +160,7 @@ export class FileListComponent {
             takeUntilDestroyed(),
         ).subscribe()
         this.remove_dir$.pipe(
-            switchMap(dirname => this.popup.warning({
+            switchMap(dirname => this._popup.warning({
                 title: `Remove Directory`,
                 messages: [
                     `Remove Directory: ${dirname}`,
@@ -172,7 +174,7 @@ export class FileListComponent {
             takeUntilDestroyed(),
         ).subscribe()
         this.copy$.pipe(
-            switchMap(filename => this.popup.input({ title: `Copy: ${filename}`, label: 'Filename', value: filename }).pipe(
+            switchMap(filename => this._popup.input({ title: `Copy: ${filename}`, label: 'Filename', value: filename }).pipe(
                 filter(value => value && value !== filename),
                 switchMap(value => this._http.post<{ data: null }>('/ndc_api/file/cp', {
                     pre: `${this.bread.file(filename)}`,
@@ -183,7 +185,7 @@ export class FileListComponent {
             takeUntilDestroyed(),
         ).subscribe()
         this.rename_file$.pipe(
-            switchMap(filename => this.popup.input({ title: `Rename File: ${filename}`, label: 'Filename', value: filename }).pipe(
+            switchMap(filename => this._popup.input({ title: `Rename File: ${filename}`, label: 'Filename', value: filename }).pipe(
                 filter(value => value && value !== filename),
                 switchMap(value => this._http.post<{ data: null }>('/ndc_api/file/rename', {
                     pre: `${this.bread.file(filename)}`,
@@ -194,7 +196,7 @@ export class FileListComponent {
             takeUntilDestroyed(),
         ).subscribe()
         this.create_file$.pipe(
-            switchMap(() => this.popup.input({ title: `Create File`, label: 'Filename', value: '' }).pipe(
+            switchMap(() => this._popup.input({ title: `Create File`, label: 'Filename', value: '' }).pipe(
                 filter(value => !!value),
                 switchMap(value => this._http.post<{ data: null }>(`/ndc_api/file/write/${this.bread.file(value)}`, '')),
             )),
@@ -202,7 +204,7 @@ export class FileListComponent {
             takeUntilDestroyed(),
         ).subscribe()
         this.create_dir$.pipe(
-            switchMap(() => this.popup.input({ title: `Create Directory`, label: 'Dirname', value: '' }).pipe(
+            switchMap(() => this._popup.input({ title: `Create Directory`, label: 'Dirname', value: '' }).pipe(
                 filter(value => !!value),
                 switchMap(value => this._http.post<{ data: null }>(`/ndc_api/file/mkdir/${this.bread.file(value)}`, '')),
             )),
@@ -237,5 +239,29 @@ export class FileListComponent {
 
     $cast(value: any) {
         return value as FileDesc
+    }
+
+    icon_of(filename: string): string {
+        return this._file_type.get_info(filename).icon
+    }
+
+    color_of(filename: string): string {
+        const file_type_info = this._file_type.get_info(filename)
+        switch (file_type_info.category) {
+            case 'text':
+                return 'text-blue-500'
+            case 'image':
+                return 'text-green-500'
+            case 'video':
+                return 'text-red-500'
+            case 'audio':
+                return 'text-purple-500'
+            case 'document':
+                return 'text-orange-500'
+            case 'archive':
+                return 'text-yellow-500'
+            default:
+                return 'text-gray-500'
+        }
     }
 }

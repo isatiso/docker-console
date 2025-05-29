@@ -29,7 +29,7 @@ export class FileEditorComponent implements OnInit, OnDestroy {
     content = ''
     edited_content = ''
     get_file_content$ = new Subject<void>()
-    options: monaco.editor.IStandaloneEditorConstructionOptions = { language: 'json' }
+    options: monaco.editor.IStandaloneEditorConstructionOptions = { language: 'plaintext' }
     downloading = false
 
     constructor(
@@ -46,6 +46,7 @@ export class FileEditorComponent implements OnInit, OnDestroy {
         ).subscribe()
         this.bread.file_stats$.pipe(
             filter(value => !!(value && value.type === 'file')),
+            tap(() => this.options = { ...this.options, language: this.bread.info?.editor_language || 'plaintext' }),
             tap(() => this.get_file_content$.next()),
             takeUntilDestroyed(),
         ).subscribe()
