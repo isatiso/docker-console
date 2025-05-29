@@ -6,3 +6,5 @@
 deploy/.bashrc
 
 test.*
+
+final_review_gate.py
