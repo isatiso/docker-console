@@ -1,28 +1,22 @@
-import { Location } from '@angular/common'
 import { HttpClient } from '@angular/common/http'
-import { Component, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core'
+import { Component, HostListener, OnDestroy, OnInit, TemplateRef, ViewChild } from '@angular/core'
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop'
 import { FormsModule } from '@angular/forms'
 import { MatButton } from '@angular/material/button'
-import { MatDivider } from '@angular/material/divider'
 import { MatIcon } from '@angular/material/icon'
-import { ActivatedRoute, Router } from '@angular/router'
 import type * as monaco from 'monaco-editor'
-import { Subject, switchMap, tap } from 'rxjs'
-import { BreadcrumbsComponent } from '../../layout/breadcrumbs/breadcrumbs.component'
-import { BreadcrumbsService } from '../../layout/breadcrumbs/breadcrumbs.service'
-import { MonacoEditorComponent } from '../../monaco/monaco-editor.component'
-import { VersionService } from '../../services/version.service'
+import { filter, Subject, switchMap, tap } from 'rxjs'
+import { BreadcrumbsService } from '../../../layout/breadcrumbs/breadcrumbs.service'
+import { MonacoEditorComponent } from '../../../monaco/monaco-editor.component'
+import { VersionService } from '../../../services/version.service'
 
 @Component({
     selector: 'ndc-file-editor',
     imports: [
-        MatButton,
-        MatDivider,
         MonacoEditorComponent,
         FormsModule,
         MatIcon,
-        BreadcrumbsComponent
+        MatButton
     ],
     templateUrl: './file-editor.component.html',
     styleUrl: './file-editor.component.scss'
@@ -30,6 +24,7 @@ import { VersionService } from '../../services/version.service'
 export class FileEditorComponent implements OnInit, OnDestroy {
 
     @ViewChild('version_editor', { static: true }) _editor?: MonacoEditorComponent
+    @ViewChild('operations') operations_template?: TemplateRef<any>
 
     content = ''
     edited_content = ''
@@ -41,7 +36,6 @@ export class FileEditorComponent implements OnInit, OnDestroy {
         private _http: HttpClient,
         public versions: VersionService,
         public bread: BreadcrumbsService,
-        private route: ActivatedRoute,
     ) {
         this.get_file_content$.pipe(
             tap(() => this.downloading = true),
@@ -50,8 +44,8 @@ export class FileEditorComponent implements OnInit, OnDestroy {
             tap(() => this.downloading = false),
             takeUntilDestroyed(),
         ).subscribe()
-        this.route.url.pipe(
-            tap(url => this.bread.update(url)),
+        this.bread.file_stats$.pipe(
+            filter(value => !!(value && value.type === 'file')),
             tap(() => this.get_file_content$.next()),
             takeUntilDestroyed(),
         ).subscribe()

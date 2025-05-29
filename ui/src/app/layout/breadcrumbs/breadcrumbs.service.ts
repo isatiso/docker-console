@@ -1,6 +1,8 @@
 import { Location } from '@angular/common'
 import { Injectable } from '@angular/core'
 import { Router, UrlSegment } from '@angular/router'
+import type { Stats } from 'node:fs'
+import { BehaviorSubject } from 'rxjs'
 
 @Injectable({
     providedIn: 'root'
@@ -9,6 +11,7 @@ export class BreadcrumbsService {
 
     category: 'projects' | 'files' = 'files'
     segments: { name: string, path: string }[] = []
+    file_stats$ = new BehaviorSubject<{ stats: Stats, type: 'directory' | 'file' } | undefined>(undefined)
 
     constructor(
         private _router: Router,
@@ -42,7 +45,7 @@ export class BreadcrumbsService {
     }
 
     go_edit(name: string) {
-        void this._router.navigate(['preview', ...this.segments.map(d => d.name), name])
+        void this._router.navigate(['files', ...this.segments.map(d => d.name), name])
     }
 
     step_in(name: string) {

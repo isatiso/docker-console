@@ -1,12 +1,9 @@
 <div class="h-16 flex items-center justify-start gap-3 px-4">
     <ndc-breadcrumbs/>
     <div class="flex items-center justify-end gap-3 ml-auto">
-        <button (click)="create_file$.next()" color="primary" mat-mini-fab matTooltip="Create new file">
-            <mat-icon class="material-symbols-rounded">note_add</mat-icon>
-        </button>
-        <button (click)="create_dir$.next()" color="primary" mat-mini-fab matTooltip="Create new folder">
-            <mat-icon class="material-symbols-rounded">create_new_folder</mat-icon>
-        </button>
+        @if (child_component) {
+            <ng-container *ngTemplateOutlet="child_component.operations_template!"></ng-container>
+        }
     </div>
 </div>
 
@@ -14,140 +11,11 @@
 <mat-divider></mat-divider>
 <mat-divider></mat-divider>
 
-<div class="overflow-y-auto relative" style="height: calc(100% - 4rem - 3px)" uploadZone (upload)="upload($event)">
-    @if (upload_status) {
-        <div class="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black/50" style="z-index: 999">
-            <div class="flex flex-col items-center justify-center gap-2">
-                <mat-icon class="animate-spin material-symbols-rounded">progress_activity</mat-icon>
-                @if (upload_status === 'compressing') {
-                    <div class="text-base">Compressing files...{{ compressing_percent | percent }}</div>
-                } @else if (upload_status === 'uploading') {
-                    <div class="text-base">Uploading files...</div>
-                }
-                <div class="text-base">Please do not close or refresh the page before the upload is complete.</div>
-            </div>
-        </div>
+<div style="height: calc(100% - 4rem - 3px)" class="w-full relative">
+    @let stats = bread.file_stats$ | async;
+    @if (stats?.type === 'directory') {
+        <ndc-file-list #child_component></ndc-file-list>
+    } @else if (stats?.type === 'file') {
+        <ndc-file-editor #child_component></ndc-file-editor>
     }
-    <table [dataSource]="files" mat-table>
-
-        <ng-container matColumnDef="select">
-            <th *matHeaderCellDef mat-header-cell>
-                <mat-checkbox (change)="$event ? toggle_all_rows() : null"
-                              [checked]="selection.hasValue() && is_all_selected()"
-                              [indeterminate]="selection.hasValue() && !is_all_selected()">
-                </mat-checkbox>
-            </th>
-            <td *matCellDef="let row" mat-cell>
-                <mat-checkbox (change)="$event ? selection.toggle(row) : null"
-                              (click)="$event.stopPropagation()"
-                              [checked]="selection.isSelected(row)">
-                </mat-checkbox>
-            </td>
-        </ng-container>
-
-        <ng-container matColumnDef="name">
-            <th *matHeaderCellDef mat-header-cell></th>
-            <td *matCellDef="let element" mat-cell>
-                <div class="inline-flex items-center justify-start gap-2">
-                    @let el = $cast(element);
-                    @if (el.type === 'directory') {
-                        <mat-icon class="text-green-500 material-symbols-rounded">folder</mat-icon>
-                        <a class="directory-link" (click)="bread.step_in(el.name)">{{ el.name }}</a>
-                    } @else if (el.type === 'file') {
-                        <mat-icon class="text-yellow-500 material-symbols-rounded">draft</mat-icon>
-                        <a class="file-link" (click)="bread.go_edit(el.name)">{{ el.name }}</a>
-                    } @else if (el.type === 'link') {
-                        <mat-icon class="text-red-500 material-symbols-rounded">draft</mat-icon>
-                        {{ el.name }}
-                    } @else {
-                        <mat-icon class="text-orange-500 material-symbols-rounded">draft</mat-icon>
-                        <a class="file-link" (click)="bread.go_edit(el.name)">{{ el.name }}</a>
-                    }
-                    @if (el.link) {
-                        <mat-icon class="text-gray-500 material-symbols-rounded">arrow_right_alt</mat-icon>
-                        <div class="text-gray-500">{{ el.link }}</div>
-                    }
-                </div>
-            </td>
-        </ng-container>
-
-        <ng-container matColumnDef="type">
-            <th *matHeaderCellDef mat-header-cell> Type</th>
-            <td *matCellDef="let element" mat-cell>
-                @let el = $cast(element);
-                <div>{{ el.link ? 'link' : el.type }}</div>
-            </td>
-        </ng-container>
-
-        <ng-container matColumnDef="size">
-            <th *matHeaderCellDef mat-header-cell> Size</th>
-            <td *matCellDef="let element" mat-cell>
-                <div>{{ element.size | bytes }}</div>
-            </td>
-        </ng-container>
-
-        <ng-container matColumnDef="updated_at">
-            <th *matHeaderCellDef mat-header-cell> Last Modified</th>
-            <td *matCellDef="let element" mat-cell>
-                <div>{{ element.mtimeMs | date: 'yyyy-MM-dd HH:mm:ss' }}</div>
-            </td>
-        </ng-container>
-
-        <ng-container matColumnDef="operation">
-            <th *matHeaderCellDef mat-header-cell> Operation</th>
-            <td *matCellDef="let element" mat-cell>
-                <div class="flex flex-wrap gap-2 py-3">
-                    @let el = $cast(element);
-                    @if (!el.link) {
-                        @switch (el.type) {
-                            @case ('directory') {
-                                <button mat-icon-button matTooltip="Copy Directory" color="primary" (click)="copy$.next(el.name)">
-                                    <mat-icon class="material-symbols-rounded">content_copy</mat-icon>
-                                </button>
-                                <button mat-icon-button matTooltip="Rename Directory" color="primary" (click)="rename_file$.next(el.name)">
-                                    <mat-icon class="material-symbols-rounded">edit</mat-icon>
-                                </button>
-                                <button mat-icon-button matTooltip="Download selected files" color="primary" (click)="download_dir$.next(el.name)">
-                                    <mat-icon class="material-symbols-rounded">download</mat-icon>
-                                </button>
-                                <button mat-icon-button matTooltip="Remove Directory" (click)="remove_dir$.next(el.name)">
-                                    <mat-icon color="warn" class="material-symbols-rounded">delete</mat-icon>
-                                </button>
-                            }
-                            @case ('file') {
-                                <button mat-icon-button matTooltip="Copy File" color="primary" (click)="copy$.next(el.name)">
-                                    <mat-icon class="material-symbols-rounded">content_copy</mat-icon>
-                                </button>
-                                <button mat-icon-button matTooltip="Rename File" color="primary" (click)="rename_file$.next(el.name)">
-                                    <mat-icon class="material-symbols-rounded">edit</mat-icon>
-                                </button>
-                                <button mat-icon-button matTooltip="Download selected files" color="primary" (click)="download_file$.next(el.name)">
-                                    <mat-icon class="material-symbols-rounded">download</mat-icon>
-                                </button>
-                                <button mat-icon-button matTooltip="Remove File" (click)="remove_file$.next(el.name)">
-                                    <mat-icon color="warn" class="material-symbols-rounded">delete</mat-icon>
-                                </button>
-                            }
-                            @default {
-
-                            }
-                        }
-                    } @else {
-                        <button mat-icon-button matTooltip="Remove File" (click)="remove_file$.next(el.name)">
-                            <mat-icon color="warn" class="material-symbols-rounded">delete</mat-icon>
-                        </button>
-                    }
-                </div>
-            </td>
-        </ng-container>
-
-        <tr *matHeaderRowDef="['name', 'type', 'size', 'updated_at', 'operation']; sticky: true" mat-header-row></tr>
-        <tr *matRowDef="let row; columns: ['name', 'type', 'size', 'updated_at', 'operation'];" class="ndc-table-row" mat-row></tr>
-
-        <tr *matNoDataRow class="mat-row">
-            <td class="mat-cell" colspan="5">
-                <div class="flex justify-center items-center h-12">The current directory is empty.</div>
-            </td>
-        </tr>
-    </table>
 </div>
