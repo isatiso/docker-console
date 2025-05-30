@@ -1,0 +1,13 @@
+@if (downloading) {
+    <div class="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black/50" style="z-index: 999">
+        <mat-icon class="animate-spin material-symbols-rounded">progress_activity</mat-icon>
+    </div>
+}
+
+<ndc-monaco-editor #version_editor style="height: 100%" [options]="options" [(ngModel)]="edited_content"></ndc-monaco-editor>
+
+<ng-template #operations>
+    @if (content_changed) {
+        <button mat-flat-button color="accent" (click)="save()">Save</button>
+    }
+</ng-template>

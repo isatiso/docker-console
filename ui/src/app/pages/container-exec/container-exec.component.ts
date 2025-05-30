@@ -9,7 +9,7 @@ import { ActivatedRoute } from '@angular/router'
 import { DockerApi, NdcResponse } from '@docker-console/common'
 import { FitAddon } from '@xterm/addon-fit'
 import { ITerminalOptions, Terminal } from '@xterm/xterm'
-import { BehaviorSubject, debounceTime, filter, map, of, Subject, switchMap, take, takeUntil, tap } from 'rxjs'
+import { BehaviorSubject, filter, map, of, Subject, switchMap, take, takeUntil, tap, throttleTime } from 'rxjs'
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket'
 import dark_theme from '../../iterm/material_dark_theme'
 import light_theme from '../../iterm/material_light_theme'
@@ -58,7 +58,7 @@ export class ContainerExecComponent implements OnDestroy, AfterViewInit {
             takeUntilDestroyed(),
         ).subscribe()
         this.resize$.pipe(
-            debounceTime(200),
+            throttleTime(300, undefined, { leading: true, trailing: true }),
             filter(() => !!this.exec_id),
             switchMap(({ cols, rows }) => this._http.post('/ndc_api/docker/resize_exec', { id: this.exec_id, w: cols, h: rows })),
             takeUntilDestroyed(),

@@ -13,7 +13,7 @@
             <td mat-cell *matCellDef="let element">
                 <div class="inline-flex items-center justify-start gap-2">
                     <div>
-                        <div><a (click)="view_detail(element.Id)" [matTooltip]="element.Id" class="directory-link">{{ element.Name.slice(1) }}</a></div>
+                        <div><a (click)="view_detail(element.Id)" [matTooltip]="element.Id" class="file-link">{{ element.Name.slice(1) }}</a></div>
                         <div>{{ element.Config.Image }}</div>
                     </div>
                 </div>
