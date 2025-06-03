@@ -1,5 +1,14 @@
 # Docker Console
 
+[![Version](https://img.shields.io/badge/version-1.4.1-blue.svg)](https://github.com/isatiso/docker-console/releases)
+[![Docker](https://img.shields.io/badge/docker-required-blue.svg)](https://www.docker.com/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-linux%20%7C%20macOS%20%7C%20windows-lightgrey.svg)](#prerequisites)
+[![TypeScript](https://img.shields.io/badge/typescript-5.6.3-blue.svg)](https://www.typescriptlang.org/)
+[![Angular](https://img.shields.io/badge/angular-17.2.0-red.svg)](https://angular.io/)
+[![Docker Hub](https://img.shields.io/badge/docker%20hub-plankroot%2Fdocker--console-blue.svg)](https://hub.docker.com/r/plankroot/docker-console)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/isatiso/docker-console)
+
 A simple and lightweight tool for running Docker commands via a user-friendly interface, enabling seamless container management for developers and system administrators. This tool is designed to simplify your workflow by providing an interactive console that integrates seamlessly with your existing Docker environment, saving time and reducing complexity for both beginners and seasoned professionals.
 
 ## Features
