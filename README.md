@@ -1,5 +1,14 @@
 # Docker Console
 
+[![Version](https://img.shields.io/badge/version-1.4.2-blue.svg)](https://github.com/isatiso/docker-console/releases)
+[![Docker](https://img.shields.io/badge/docker-required-blue.svg)](https://www.docker.com/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-linux%20%7C%20macOS%20%7C%20windows-lightgrey.svg)](#prerequisites)
+[![TypeScript](https://img.shields.io/badge/typescript-5.6.3-blue.svg)](https://www.typescriptlang.org/)
+[![Angular](https://img.shields.io/badge/angular-17.2.0-red.svg)](https://angular.io/)
+[![Docker Hub](https://img.shields.io/badge/docker%20hub-plankroot%2Fdocker--console-blue.svg)](https://hub.docker.com/r/plankroot/docker-console)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/isatiso/docker-console)
+
 A simple and lightweight tool for running Docker commands via a user-friendly interface, enabling seamless container management for developers and system administrators. This tool is designed to simplify your workflow by providing an interactive console that integrates seamlessly with your existing Docker environment, saving time and reducing complexity for both beginners and seasoned professionals.
 
 ## Features
@@ -75,7 +84,7 @@ The installation script supports various customization options:
 ./install.sh
 
 # Install specific version
-./install.sh --tag 1.3.5
+./install.sh --tag 1.4.2
 
 # Install on custom port
 ./install.sh --port 8080
@@ -84,7 +93,7 @@ The installation script supports various customization options:
 ./install.sh --config-dir /home/user/docker-console
 
 # Combine multiple options
-./install.sh --tag 1.3.5 --port 8080 --config-dir /home/user/docker-console
+./install.sh --tag 1.4.2 --port 8080 --config-dir /home/user/docker-console
 
 # View all available options
 ./install.sh --help
@@ -99,7 +108,7 @@ You can also pass parameters directly through the curl command using `bash -s --
 curl -fsSL https://raw.githubusercontent.com/isatiso/docker-console/refs/heads/master/install.sh | bash
 
 # Install specific version
-curl -fsSL https://raw.githubusercontent.com/isatiso/docker-console/refs/heads/master/install.sh | bash -s -- --tag 1.3.5
+curl -fsSL https://raw.githubusercontent.com/isatiso/docker-console/refs/heads/master/install.sh | bash -s -- --tag 1.4.2
 
 # Install on custom port
 curl -fsSL https://raw.githubusercontent.com/isatiso/docker-console/refs/heads/master/install.sh | bash -s -- --port 8080
@@ -108,7 +117,7 @@ curl -fsSL https://raw.githubusercontent.com/isatiso/docker-console/refs/heads/m
 curl -fsSL https://raw.githubusercontent.com/isatiso/docker-console/refs/heads/master/install.sh | bash -s -- --config-dir /home/user/docker-console
 
 # Combine multiple options
-curl -fsSL https://raw.githubusercontent.com/isatiso/docker-console/refs/heads/master/install.sh | bash -s -- --tag 1.3.5 --port 8080
+curl -fsSL https://raw.githubusercontent.com/isatiso/docker-console/refs/heads/master/install.sh | bash -s -- --tag 1.4.2 --port 8080
 
 # Get help information
 curl -fsSL https://raw.githubusercontent.com/isatiso/docker-console/refs/heads/master/install.sh | bash -s -- --help
